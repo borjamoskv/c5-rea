@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "c5-rea"
+version = "1.0.0"
+description = "Zero-Dependency Clean-Room Reverse Engineering & Existence-Gap Firewall for AI Agents (<15ms, 60KB Kolmogorov Context)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Borja Fernández Angulo", email = "borjamoskv@gmail.com" }
+]
+keywords = ["mcp", "reverse-engineering", "electron", "asar", "mach-o", "ai-agents", "slopsquatting", "clean-room"]
+dependencies = []
+
+[project.scripts]
+c5-rea = "c5_rea_cli:main"

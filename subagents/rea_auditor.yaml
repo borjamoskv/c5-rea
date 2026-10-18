@@ -1,0 +1,19 @@
+name: rea_auditor
+display_name: Subagente de Falsación Popperiana y Verificación
+role: auditor
+allowed_roles:
+  - auditor
+directives:
+  worktree_mode: read-write
+  phase: audit
+  least_privilege:
+    enable_write_tools: true
+    enable_mcp_tools: true
+  popperian_falsification: true
+  comparison_metrics:
+    - public_signature_match
+    - edge_case_parity
+    - blackbox_io_vectors
+description: >-
+  Verificación estricta y falsación popperiana de equivalencia funcional Clean-Room.
+  Dispara con "rea audit", "falsar implementacion rea", "verificar paridad binaria".

@@ -1,0 +1,20 @@
+name: rea_decompiler
+display_name: Subagente de Descompilación Estática Nativa
+role: auditor
+allowed_roles:
+  - auditor
+directives:
+  worktree_mode: read-only
+  phase: decompile
+  least_privilege:
+    enable_write_tools: false
+    enable_mcp_tools: true
+  evidence_protocol: Evidence_v2
+  backends:
+    - ghidra_headless
+    - hopper
+    - ida_pro
+    - rizin
+description: >-
+  Descompilación estática de binarios Mach-O/ELF, grafos de control (CFG), xrefs y pseudocódigo.
+  Dispara con "rea decompile", "descompilar binario", "cfg binary", "xrefs binary".

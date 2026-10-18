@@ -1,0 +1,1876 @@
+{
+  "target": {
+    "target_path": "/Applications/DJ.Studio.app/Contents/MacOS/DJ.Studio",
+    "sha256": "92c9211a2182f2f4807631c7f5e8774be4aa1a5d048b67a00b833d3388644c0b",
+    "file_size_bytes": 69824,
+    "architecture": "arm64",
+    "entropy_shannon": 1.9294,
+    "is_packed": false,
+    "packer_type": null,
+    "imported_libraries": [
+      "@rpath/Electron",
+      "/usr/lib/libSystem.B.dylib"
+    ],
+    "exported_symbols_count": 1,
+    "triage_timestamp": "2026-10-18T15:44:52.801564"
+  },
+  "native_functions": [
+    {
+      "symbol_name": "sub_00000001000005a8",
+      "mangled_name": null,
+      "memory_location": {
+        "start_addr": "0x00000001000005a8",
+        "end_addr": "0x00000001000005d8",
+        "section": "__TEXT.__text"
+      },
+      "pseudocode": "0x00000001000005a8\tstp\tx20, x19, [sp, #-0x20]!\n0x00000001000005ac\tstp\tx29, x30, [sp, #0x10]\n0x00000001000005b0\tadd\tx29, sp, #0x10\n0x00000001000005b4\tmov\tx19, x1\n0x00000001000005b8\tmov\tx20, x0\n0x00000001000005bc\tbl\t0x100000608\n0x00000001000005c0\tbl\t0x100000728 ; symbol stub for: __ZN8electron5fuses18IsRunAsNodeEnabledEv\n0x00000001000005c4\tcbnz\tw0, 0x1000005dc\n0x00000001000005c8\tmov\tx0, x20\n0x00000001000005cc\tmov\tx1, x19\n0x00000001000005d0\tldp\tx29, x30, [sp, #0x10]\n0x00000001000005d4\tldp\tx20, x19, [sp], #0x20\n0x00000001000005d8\tb\t0x10000071c ; symbol stub for: _ElectronMain",
+      "cfg_nodes": 5,
+      "xrefs_in": [],
+      "xrefs_out": [
+        "0x100000608",
+        "_ElectronMain",
+        "__ZN8electron5fuses18IsRunAsNodeEnabledEv"
+      ],
+      "invariants_verified": [
+        "ARM64_BRANCH_GRAPH"
+      ],
+      "unknowns": []
+    },
+    {
+      "symbol_name": "sub_00000001000005dc",
+      "mangled_name": null,
+      "memory_location": {
+        "start_addr": "0x00000001000005dc",
+        "end_addr": "0x0000000100000604",
+        "section": "__TEXT.__text"
+      },
+      "pseudocode": "0x00000001000005dc\tadr\tx0, #488 ; literal pool for: \"ELECTRON_RUN_AS_NODE\"\n0x00000001000005e0\tnop\t\n0x00000001000005e4\tbl\t0x100000710 ; symbol stub for: _getenv\n0x00000001000005e8\tcbz\tx0, 0x1000005c8\n0x00000001000005ec\tldrb\tw8, [x0]\n0x00000001000005f0\tcbz\tw8, 0x1000005c8\n0x00000001000005f4\tmov\tx0, x20\n0x00000001000005f8\tmov\tx1, x19\n0x00000001000005fc\tldp\tx29, x30, [sp, #0x10]\n0x0000000100000600\tldp\tx20, x19, [sp], #0x20\n0x0000000100000604\tb\t0x100000704 ; symbol stub for: _ElectronInitializeICUandStartNode",
+      "cfg_nodes": 5,
+      "xrefs_in": [],
+      "xrefs_out": [
+        "_ElectronInitializeICUandStartNode",
+        "_getenv"
+      ],
+      "invariants_verified": [
+        "ARM64_BRANCH_GRAPH"
+      ],
+      "unknowns": []
+    },
+    {
+      "symbol_name": "sub_0000000100000608",
+      "mangled_name": null,
+      "memory_location": {
+        "start_addr": "0x0000000100000608",
+        "end_addr": "0x0000000100000664",
+        "section": "__TEXT.__text"
+      },
+      "pseudocode": "0x0000000100000608\tsub\tsp, sp, #0xa0\n0x000000010000060c\tstp\tx29, x30, [sp, #0x90]\n0x0000000100000610\tadd\tx29, sp, #0x90\n0x0000000100000614\tmovi.16b\tv0, #0xaa\n0x0000000100000618\tstp\tq0, q0, [sp, #0x70]\n0x000000010000061c\tstp\tq0, q0, [sp, #0x50]\n0x0000000100000620\tstp\tq0, q0, [sp, #0x30]\n0x0000000100000624\tstp\tq0, q0, [sp, #0x10]\n0x0000000100000628\tstr\tq0, [sp]\n0x000000010000062c\tmov\tx1, sp\n0x0000000100000630\tmov\tw0, #0x0\n0x0000000100000634\tbl\t0x10000074c ; symbol stub for: _fstat\n0x0000000100000638\ttbnz\tw0, #0x1f, 0x1000006d0\n0x000000010000063c\tmov\tx1, sp\n0x0000000100000640\tmov\tw0, #0x1\n0x0000000100000644\tbl\t0x10000074c ; symbol stub for: _fstat\n0x0000000100000648\ttbnz\tw0, #0x1f, 0x100000668\n0x000000010000064c\tmov\tx1, sp\n0x0000000100000650\tmov\tw0, #0x2\n0x0000000100000654\tbl\t0x10000074c ; symbol stub for: _fstat\n0x0000000100000658\ttbnz\tw0, #0x1f, 0x10000069c\n0x000000010000065c\tldp\tx29, x30, [sp, #0x90]\n0x0000000100000660\tadd\tsp, sp, #0xa0\n0x0000000100000664\tret\t",
+      "cfg_nodes": 7,
+      "xrefs_in": [],
+      "xrefs_out": [
+        "_fstat"
+      ],
+      "invariants_verified": [
+        "ARM64_BRANCH_GRAPH"
+      ],
+      "unknowns": []
+    }
+  ],
+  "ipc_channels": [
+    {
+      "channel": "about-data",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "app-close-confirmation-response",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "app-close-ping-response",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "app-shutdown-cleanup",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "audio-meta-data",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "audio-transcode",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "audio-transcode-async",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "audio-transcode-filepath",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "audio:V2:meta-data",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-open-window",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-add-offline-file",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-add-tracks-to-playlist",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-create-playlist",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-debug-reset",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-delete-playlist",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-environment",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-find-track-my-collection",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-audio-data",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-audio-samples",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-available-streaming-quality",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-current-environment",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-current-track-readers",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-genres",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-guest-audio-data",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-guest-audio-samples",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-guest-track-audio-information",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-guest-track-reader",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-my-collection",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-offline-tracks",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-playlist-info-by-playlist-id",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-playlists",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-track-audio-information",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-track-bytes",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-track-reader",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-tracks-by-genre",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-get-tracks-by-playlist-id",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-guest-query",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-guest-report-position",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-guest-search",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-init",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-login",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-logout",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-maximum-offline-tracks",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-query",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-release",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-release-all-track-readers",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-remove-cached-login-files",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-remove-offline-file",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-remove-offline-storage",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-remove-tracks-from-playlist",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-rename-playlist",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-report-position",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-reset-connection",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-search",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-search-offline-tracks",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-set-current-streaming-quality",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-state",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-subscription-end-date",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-subscription-start-date",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-switch-environment",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-test-sentry",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-track-reset-download",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-username",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatbase-sdk-version",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatport-login",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "beatsource-login",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "billingToken:get",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "billingToken:remove",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "billingToken:set",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "cancel-app-update-download",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "clear-stems-cache",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "close-about-window",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "close-modal",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "copy-about-info",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "cratehackers-login",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "credits-data",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "customer-portal",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "database-file-delete",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "database-file-get-as-buffer",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "database-file-get-as-string",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "database-file-store",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "database-folder-create",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "database-folder-delete",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "database-folder-read",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "database-partial-file-get-as-buffer",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "debug-unentitled-token",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "debug-unentitled-version-info",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "download-progress",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "enable-developer-mode",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "extensions:activate",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "extensions:cancel-download",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "extensions:deactivate",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "extensions:download-and-install-extension",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "extensions:get-activated",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "extensions:get-available",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "extensions:get-info",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "extensions:get-path",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "extensions:set-path",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "extensions:uninstall",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "extensions:update",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system-file-get-as-buffer",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system-file-get-as-string",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system-file-handle-close",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system-file-handle-open",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system-file-store",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system-file-write-stream",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system-folder-create",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system-folder-delete",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system-get-root-folder",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system-open-folder",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system-path-exists",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system-paths-exists",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system:available-disk-space",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system:file-delete",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system:file-metadata",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system:file-stream",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system:path-normalize",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system:path-parse",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "file-system:path-separator",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "focus",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-app-update-info",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-app-url",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-auto-update-status",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-computer-name",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-device-id",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-locale",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-locale-i18n",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-pre-release-status",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-store-language",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-unentitled-update-info",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-version",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-youtube-audio",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "get-youtube-metadata",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "has-stems-cache-folder",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--decode-audio-chunk",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--enable-plugin-processing",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--get-audio-file-info",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--get-loaded-multi-effects",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--get-multi-effect-array-buffer",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--get-multi-effect-instances",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--get-multi-effects",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--get-parameter-layout",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--get-plugin-list",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--get-plugin-list-without-scanning",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--get-plugin-state",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--get-processing-performance",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--hide-all-plugin-guis",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--load-multi-effect",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--load-plugin",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--load-plugin-async",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--open-loopcloud-plugin",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--remove-multi-effect",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--remove-plugin",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--restore-plugin-gui-visibility",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--set-loopcloud-volume",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--set-multi-effects-parameters",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--set-plugin-gui-visibility",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--set-plugin-state",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--start-plugin-scan",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--stop-plugin-scan",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "internal-effects--toggle-plugin-gui-visibility",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "is-big-sur-or-higher",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "is-scheme-available",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "is-store-app",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "load-checkout",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "loopcloud-get-root-folder",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "loopcloud-get-sample-audio-data",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "loopcloud-get-samples",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "maximize",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "menu-update",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "mixcloud-open-login",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "mixed-in-key-analyze",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "mixed-in-key-mashup",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "mixed-in-key-vipcode",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "open-about-window",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "open-app-store",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "open-browser-window",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "open-downloads-folder",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "open-login",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "open-logout",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "open-modal",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "proxy-is-available",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "refreshToken:get",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "refreshToken:remove",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "register-worker-pid",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "rekordbox-add-tracks",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "rekordbox-export-to-playlist",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "rekordbox-export-tracks-with-hotcues",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "rekordbox-get-keys",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "reload-app",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "relocate",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "request-cancellation",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "request-checking-for-updates",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "request-locale-sync",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "request-project-file-import",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "reset-app-url",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "restart-and-install-update",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "search-youtube",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "search-youtube-playlists",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "sentry-capture-exception",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "sentry-set-tag",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "sentry-set-user",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "set-auto-update-status",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "set-locale",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "set-non-closable",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "set-pre-release",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "set-window-button-position",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "settings:findFolderPath",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "settings:getDefaultRootFolder",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "settings:getExportsFolder",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "settings:getRootFolder",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "settings:relaunch",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "settings:setExportsFolder",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "settings:setRootFolder",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "settings:setRootFolderForPath",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "settings:setStartEmpty",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "show-about",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "show-credits",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "soundcloud-login",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "start-app-update-download",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "start-manual-download",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "start-update",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "stems-analyze",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "stems-analyze-beatgrid",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "stems-analyze-beatgrid-accurate",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "stems-analyze-phrases",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "stems-in-cache",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "stems-initialize",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "stems-separate",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "stems-separate-hq",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "stems-set-device",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "studio-write-chunk-to-file-stream",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "sync-locale",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "synth-engine-callback",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "synth-engine-crashed",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "synth-engine-get-output-devices",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "synth-engine-initialize",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "synth-engine-kill",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "synth-engine-post-message",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "synth-engine-set-output-device",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "synth-engine-terminate",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "track-successfull-startup",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "unregister-worker-pid",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "upload-support-log",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "url-dialog-response",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "wake-lock-is-started",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "wake-lock-release",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "wake-lock-request",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "web-manager-get-status",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "web-manager-go-offline",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "web-manager-go-online",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "web-manager-net-is-online",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "web-manager-reload-web-app",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "webserver-close",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "webserver-open",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    },
+    {
+      "channel": "zip-create",
+      "direction": "inferred_bi_directional",
+      "sender_location": "/Applications/DJ.Studio.app/Contents/Resources/app.asar",
+      "handler_location": null,
+      "payload_schema": {}
+    }
+  ],
+  "extracted_strings": [],
+  "clean_room_specification": {},
+  "falsification_verdict": "PASS"
+}

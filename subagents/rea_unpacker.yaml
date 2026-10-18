@@ -1,0 +1,19 @@
+name: rea_unpacker
+display_name: Subagente de Extracción de Electron y Webpack
+role: ejecutor
+allowed_roles:
+  - ejecutor
+directives:
+  worktree_mode: read-write
+  phase: extraction
+  least_privilege:
+    enable_write_tools: true
+    enable_mcp_tools: true
+  targets:
+    - asar_archives
+    - webpack_bundles
+    - sourcemaps
+    - ipc_channels
+description: >-
+  Desempaquetado de .asar, desminificado de AST Webpack y mapeo de canales IPC.
+  Dispara con "rea unpack", "extraer asar", "auditar electron app", "mapear ipc".

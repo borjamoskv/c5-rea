@@ -1,0 +1,19 @@
+name: rea_recreator
+display_name: Subagente de Síntesis Clean-Room
+role: ejecutor
+allowed_roles:
+  - ejecutor
+directives:
+  worktree_mode: read-write
+  phase: synthesis
+  least_privilege:
+    enable_write_tools: true
+    enable_mcp_tools: false
+  clean_room_standard: true
+  target_languages:
+    - rust
+    - typescript
+    - python
+description: >-
+  Reimplementación limpia y síntesis funcional sin código binario propietario.
+  Dispara con "rea recreate", "clean room reverse", "sintetizar codigo rea".

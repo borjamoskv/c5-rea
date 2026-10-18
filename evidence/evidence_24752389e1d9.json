@@ -1,0 +1,168 @@
+{
+  "target": {
+    "target_path": "/bin/ls",
+    "sha256": "24752389e1d97c9555dd153b644902fadd460dfbe1a166251876c67bbacb0810",
+    "file_size_bytes": 154208,
+    "architecture": "x86_64 arm64e",
+    "entropy_shannon": 3.1337,
+    "is_packed": false,
+    "packer_type": null,
+    "imported_libraries": [
+      "/usr/lib/libutil.dylib",
+      "/usr/lib/libncurses.5.4.dylib",
+      "/usr/lib/libSystem.B.dylib"
+    ],
+    "exported_symbols_count": 6,
+    "triage_timestamp": "2026-10-18T15:44:44.514214"
+  },
+  "native_functions": [
+    {
+      "symbol_name": "sub_0000000100000700",
+      "mangled_name": null,
+      "memory_location": {
+        "start_addr": "0x0000000100000700",
+        "end_addr": "0x0000000100000708",
+        "section": "__TEXT.__text"
+      },
+      "pseudocode": "0x0000000100000700\tadd\tx0, x0, #0x68\n0x0000000100000704\tadd\tx1, x1, #0x68\n0x0000000100000708\tb\t0x100004684 ; symbol stub for: _strcoll",
+      "cfg_nodes": 2,
+      "xrefs_in": [],
+      "xrefs_out": [
+        "_strcoll"
+      ],
+      "invariants_verified": [
+        "ARM64_BRANCH_GRAPH"
+      ],
+      "unknowns": []
+    },
+    {
+      "symbol_name": "sub_000000010000070c",
+      "mangled_name": null,
+      "memory_location": {
+        "start_addr": "0x000000010000070c",
+        "end_addr": "0x0000000100000718",
+        "section": "__TEXT.__text"
+      },
+      "pseudocode": "0x000000010000070c\tmov\tx8, x0\n0x0000000100000710\tadd\tx0, x1, #0x68\n0x0000000100000714\tadd\tx1, x8, #0x68\n0x0000000100000718\tb\t0x100004684 ; symbol stub for: _strcoll",
+      "cfg_nodes": 2,
+      "xrefs_in": [],
+      "xrefs_out": [
+        "_strcoll"
+      ],
+      "invariants_verified": [
+        "ARM64_BRANCH_GRAPH"
+      ],
+      "unknowns": []
+    },
+    {
+      "symbol_name": "sub_000000010000071c",
+      "mangled_name": null,
+      "memory_location": {
+        "start_addr": "0x000000010000071c",
+        "end_addr": "0x0000000100000738",
+        "section": "__TEXT.__text"
+      },
+      "pseudocode": "0x000000010000071c\tldr\tx8, [x1, #0x60]\n0x0000000100000720\tldr\tx10, [x8, #0x30]\n0x0000000100000724\tldr\tx9, [x0, #0x60]\n0x0000000100000728\tldr\tx11, [x9, #0x30]\n0x000000010000072c\tcmp\tx10, x11\n0x0000000100000730\tb.le\t0x10000073c\n0x0000000100000734\tmov\tw0, #0x1\n0x0000000100000738\tret\t",
+      "cfg_nodes": 2,
+      "xrefs_in": [],
+      "xrefs_out": [],
+      "invariants_verified": [
+        "ARM64_BRANCH_GRAPH"
+      ],
+      "unknowns": []
+    },
+    {
+      "symbol_name": "sub_000000010000073c",
+      "mangled_name": null,
+      "memory_location": {
+        "start_addr": "0x000000010000073c",
+        "end_addr": "0x0000000100000744",
+        "section": "__TEXT.__text"
+      },
+      "pseudocode": "0x000000010000073c\tb.ge\t0x100000748\n0x0000000100000740\tmov\tw0, #-0x1\n0x0000000100000744\tret\t",
+      "cfg_nodes": 2,
+      "xrefs_in": [],
+      "xrefs_out": [],
+      "invariants_verified": [
+        "ARM64_BRANCH_GRAPH"
+      ],
+      "unknowns": []
+    },
+    {
+      "symbol_name": "sub_0000000100000748",
+      "mangled_name": null,
+      "memory_location": {
+        "start_addr": "0x0000000100000748",
+        "end_addr": "0x000000010000077c",
+        "section": "__TEXT.__text"
+      },
+      "pseudocode": "0x0000000100000748\tldr\tx8, [x8, #0x38]\n0x000000010000074c\tldr\tx9, [x9, #0x38]\n0x0000000100000750\tcmp\tx8, x9\n0x0000000100000754\tb.gt\t0x100000734\n0x0000000100000758\tb.lt\t0x100000740\n0x000000010000075c\tadrp\tx8, 12 ; 0x10000c000\n0x0000000100000760\tadd\tx8, x8, #0x2c\n0x0000000100000764\tldr\tw8, [x8]\n0x0000000100000768\tcmp\tw8, #0x0\n0x000000010000076c\tcsel\tx8, x0, x1, eq\n0x0000000100000770\tcsel\tx9, x1, x0, eq\n0x0000000100000774\tadd\tx0, x8, #0x68\n0x0000000100000778\tadd\tx1, x9, #0x68\n0x000000010000077c\tb\t0x100004684 ; symbol stub for: _strcoll",
+      "cfg_nodes": 4,
+      "xrefs_in": [],
+      "xrefs_out": [
+        "_strcoll"
+      ],
+      "invariants_verified": [
+        "ARM64_BRANCH_GRAPH"
+      ],
+      "unknowns": []
+    },
+    {
+      "symbol_name": "sub_0000000100000780",
+      "mangled_name": null,
+      "memory_location": {
+        "start_addr": "0x0000000100000780",
+        "end_addr": "0x00000001000007ac",
+        "section": "__TEXT.__text"
+      },
+      "pseudocode": "0x0000000100000780\tmov\tx8, x0\n0x0000000100000784\tmov\tx0, x1\n0x0000000100000788\tmov\tx1, x8\n0x000000010000078c\tb\t0x10000071c\n0x0000000100000790\tldr\tx8, [x1, #0x60]\n0x0000000100000794\tldr\tx10, [x8, #0x20]\n0x0000000100000798\tldr\tx9, [x0, #0x60]\n0x000000010000079c\tldr\tx11, [x9, #0x20]\n0x00000001000007a0\tcmp\tx10, x11\n0x00000001000007a4\tb.le\t0x1000007b0\n0x00000001000007a8\tmov\tw0, #0x1\n0x00000001000007ac\tret\t",
+      "cfg_nodes": 3,
+      "xrefs_in": [],
+      "xrefs_out": [],
+      "invariants_verified": [
+        "ARM64_BRANCH_GRAPH"
+      ],
+      "unknowns": []
+    },
+    {
+      "symbol_name": "sub_00000001000007b0",
+      "mangled_name": null,
+      "memory_location": {
+        "start_addr": "0x00000001000007b0",
+        "end_addr": "0x00000001000007b8",
+        "section": "__TEXT.__text"
+      },
+      "pseudocode": "0x00000001000007b0\tb.ge\t0x1000007bc\n0x00000001000007b4\tmov\tw0, #-0x1\n0x00000001000007b8\tret\t",
+      "cfg_nodes": 2,
+      "xrefs_in": [],
+      "xrefs_out": [],
+      "invariants_verified": [
+        "ARM64_BRANCH_GRAPH"
+      ],
+      "unknowns": []
+    },
+    {
+      "symbol_name": "sub_00000001000007bc",
+      "mangled_name": null,
+      "memory_location": {
+        "start_addr": "0x00000001000007bc",
+        "end_addr": "0x00000001000007f0",
+        "section": "__TEXT.__text"
+      },
+      "pseudocode": "0x00000001000007bc\tldr\tx8, [x8, #0x28]\n0x00000001000007c0\tldr\tx9, [x9, #0x28]\n0x00000001000007c4\tcmp\tx8, x9\n0x00000001000007c8\tb.gt\t0x1000007a8\n0x00000001000007cc\tb.lt\t0x1000007b4\n0x00000001000007d0\tadrp\tx8, 12 ; 0x10000c000\n0x00000001000007d4\tadd\tx8, x8, #0x2c\n0x00000001000007d8\tldr\tw8, [x8]\n0x00000001000007dc\tcmp\tw8, #0x0\n0x00000001000007e0\tcsel\tx8, x0, x1, eq\n0x00000001000007e4\tcsel\tx9, x1, x0, eq\n0x00000001000007e8\tadd\tx0, x8, #0x68\n0x00000001000007ec\tadd\tx1, x9, #0x68\n0x00000001000007f0\tb\t0x100004684 ; symbol stub for: _strcoll",
+      "cfg_nodes": 4,
+      "xrefs_in": [],
+      "xrefs_out": [
+        "_strcoll"
+      ],
+      "invariants_verified": [
+        "ARM64_BRANCH_GRAPH"
+      ],
+      "unknowns": []
+    }
+  ],
+  "ipc_channels": [],
+  "extracted_strings": [],
+  "clean_room_specification": {},
+  "falsification_verdict": null
+}

@@ -1,0 +1,20 @@
+name: rea_triage
+display_name: Subagente de Triage Nivel 0
+role: arquitecto
+allowed_roles:
+  - arquitecto
+directives:
+  worktree_mode: read-only
+  phase: triage
+  least_privilege:
+    enable_write_tools: false
+    enable_mcp_tools: true
+  entropy_threshold: 7.3
+  target_architectures:
+    - arm64
+    - arm64e
+    - x86_64
+    - universal
+description: >-
+  Triage de bajo coste, cálculo de entropía de Shannon, hashes SHA-256 y detección
+  de empaquetadores (UPX). Dispara con "rea triage", "auditar binario triage", "triage ejecutable".
