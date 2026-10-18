@@ -1,0 +1,30 @@
+name: C5-REA Zero-Waste CI Gate
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Run Deterministic Unit Tests (<0.01s, 0 deps)
+      run: |
+        python3 -m unittest discover -s tests -p "test_*.py" -v
+
+    - name: Run Existence-Gap Self-Audit (0% Slop / 0% Phantom Imports)
+      run: |
+        python3 c5_rea_cli.py existence-gap .
