@@ -226,10 +226,19 @@ def audit_ts_or_rust_file(file_path: Path, root_dir: Path) -> Dict[str, Any]:
     }
 
 
+def _resolve_repo_root(start_path: Path) -> Path:
+    """Ascends parent directories to locate the workspace root (.git, pyproject.toml, package.json, Cargo.toml)."""
+    curr = start_path if start_path.is_dir() else start_path.parent
+    for candidate in (curr, *curr.parents):
+        if any((candidate / marker).exists() for marker in (".git", "pyproject.toml", "package.json", "Cargo.toml")):
+            return candidate
+    return curr
+
+
 def run_existence_gap_audit(target_path: str) -> Dict[str, Any]:
     """Runs the Popperian Existence-Gap Audit on a file or directory."""
     target = Path(target_path).resolve()
-    root_dir = target if target.is_dir() else target.parent
+    root_dir = _resolve_repo_root(target)
 
     files_to_scan: List[Path] = []
     if target.is_file():
