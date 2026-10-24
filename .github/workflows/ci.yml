@@ -21,7 +21,21 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Run Deterministic Unit Tests (<0.01s, 0 deps)
+    - name: Set up Node.js for Optional JS Recovery Suite
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+
+    - name: Provision Ephemeral JS Toolchain
+      run: |
+        mkdir -p /tmp/c5_js_toolchain
+        cd /tmp/c5_js_toolchain
+        npm init -y
+        npm install --silent @babel/generator@^7.26.0 @babel/parser@^7.26.0 @babel/types@^7.26.0
+
+    - name: Run Full Deterministic Unit & Differential Suite (51/51 tests)
+      env:
+        C5_REA_JS_TOOLCHAIN: /tmp/c5_js_toolchain
       run: |
         python3 -m unittest discover -s tests -p "test_*.py" -v
 
