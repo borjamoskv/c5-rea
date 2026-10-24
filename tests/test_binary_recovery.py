@@ -123,6 +123,30 @@ class RealBinaryRecoveryTests(unittest.TestCase):
             result = execute_case(binary, {'argv': [], 'stdin': '', 'files': {}, 'locale': 'C'})
         self.assertEqual(result['returncode'], 0)
 
+    def test_indirect_branch_and_16bit_memory_operations(self):
+        evidence = copy.deepcopy(self.evidence)
+        spec = evidence.clean_room_specification
+        # Test jump table pattern (br x9) and 16-bit struct load/store (strh / ldrh)
+        target_addr = 4096 + 7 * 4
+        operations = [
+            ('mov', ['w0', '#0x42']),
+            ('strh', ['w0', '[sp, #16]']),
+            ('ldrh', ['w1', '[sp, #16]']),
+            ('mov', ['x9', hex(target_addr)]),
+            ('br', ['x9']),
+            ('mov', ['w0', '#1']),       # Should be skipped by the branch
+            ('ret', []),
+            ('cmp', ['w1', '#0x42']),     # Target landing: 4096 + 7*4
+            ('cset', ['w0', 'ne']),       # w0 = 0 if w1 == 0x42
+            ('ret', [])
+        ]
+        instructions = [{'address': 4096 + i * 4, 'op': op, 'args': args} for i, (op, args) in enumerate(operations)]
+        spec['ir'] = {'entry': 4096, 'instructions': instructions, 'literals': {}}
+        with tempfile.TemporaryDirectory() as directory:
+            binary, source = generate_binary(evidence, directory)
+            result = execute_case(binary, {'argv': [], 'stdin': '', 'files': {}, 'locale': 'C'})
+        self.assertEqual(result['returncode'], 0)
+
 
 if __name__ == '__main__':
     unittest.main()

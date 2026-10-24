@@ -354,14 +354,20 @@ def translated_statements(instruction, addresses, abi):
         return [write_reg('x30', str(following)), statement]
     if op in ('ret', 'retab', 'retaa'):
         return ['if (x[30] == 0) return (int)x[0];', 'target = x[30]; goto indirect_return;']
-    if op in ('ldr', 'ldur', 'ldrsw', 'ldrb', 'str', 'stur', 'strb', 'ldp', 'stp'):
+    if op in ('br', 'braaz', 'brabz'):
+        register = args[0] if op == 'br' else ('x' + args[0][1:] if args[0].startswith('x') else args[0])
+        return ['target = ' + reg(register) + ';', 'goto indirect_return;']
+    if op in ('blr', 'blraaz', 'blrabz'):
+        register = args[0] if op == 'blr' else ('x' + args[0][1:] if args[0].startswith('x') else args[0])
+        return [write_reg('x30', str(following)), 'target = ' + reg(register) + ';', 'goto indirect_return;']
+    if op in ('ldr', 'ldur', 'ldrsw', 'ldrb', 'ldrh', 'str', 'stur', 'strb', 'strh', 'ldp', 'stp'):
         pair = op in ('ldp', 'stp')
         count = 2 if pair else 1
         before, address, after = memory_operand(args[count], args[count+1:])
         result = [before] if before else []
         result.append('address = ' + address + ';')
         for i, destination in enumerate(args[:count]):
-            width = 128 if destination.startswith('q') else (8 if op in ('ldrb', 'strb') else (32 if destination.startswith('w') or op == 'ldrsw' else 64))
+            width = 128 if destination.startswith('q') else (16 if op in ('ldrh', 'strh') else (8 if op in ('ldrb', 'strb') else (32 if destination.startswith('w') or op == 'ldrsw' else 64)))
             location = '(address + ' + str(i * (width // 8)) + ')'
             if op.startswith('st'):
                 result.append('store' + str(width) + '(' + location + ', ' + reg(destination) + ');')
@@ -389,7 +395,7 @@ def generate_c(ir, abi):
                 raise UnsupportedBinary('INVALID_ABI_SYMBOL_NAME')
             parameters = function['parameters'] + (['...'] if function['variadic'] else [])
             lines.append('extern ' + function['type'].split('(', 1)[0].strip() + ' ' + name + '(' + (', '.join(parameters) or 'void') + ');')
-    for bits in (8, 32, 64, 128):
+    for bits in (8, 16, 32, 64, 128):
         lines.append('static uint' + str(bits) + '_t load' + str(bits) + '(uintptr_t p) { uint' + str(bits) + '_t v; memcpy(&v, (void *)p, sizeof v); return v; }')
         lines.append('static void store' + str(bits) + '(uintptr_t p, uint' + str(bits) + '_t v) { memcpy((void *)p, &v, sizeof v); }')
     for name, encoded in sorted(ir['literals'].items()):
