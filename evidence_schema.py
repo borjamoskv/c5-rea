@@ -93,7 +93,7 @@ class BinaryTriageReport(_SchemaBase):
     sha256: str
     file_size_bytes: int
     architecture: str
-    entropy_shannon: float
+    entropy_shannon: Optional[float]
     is_packed: bool = False
     packer_type: Optional[str] = None
     imported_libraries: List[str] = field(default_factory=list)
@@ -111,7 +111,7 @@ class BinaryTriageReport(_SchemaBase):
             sha256=data["sha256"],
             file_size_bytes=int(data["file_size_bytes"]),
             architecture=data["architecture"],
-            entropy_shannon=float(data["entropy_shannon"]),
+            entropy_shannon=float(data["entropy_shannon"]) if data["entropy_shannon"] is not None else None,
             is_packed=bool(data.get("is_packed", False)),
             packer_type=data.get("packer_type"),
             imported_libraries=list(data.get("imported_libraries", [])),

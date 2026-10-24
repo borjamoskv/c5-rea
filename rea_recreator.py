@@ -12,7 +12,7 @@ import os
 import json
 import re
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from evidence_schema import EvidenceEnvelopeV2, IPCEvidence, FunctionEvidence
 
@@ -208,7 +208,7 @@ def synthesize_python(envelope: EvidenceEnvelopeV2, out_dir: Path) -> List[Path]
     return generated_files
 
 
-def run_recreation(evidence_json_path: str, target_lang: str = "ts", out_base_dir: Optional[str] = None) -> List[Path]:
+def run_recreation(evidence_json_path: str, target_lang: str = "py", out_base_dir: Optional[str] = None, contracts_only: bool = False) -> List[Path]:
     """Carga el dossier de evidencia y dispara la síntesis."""
     path = Path(evidence_json_path).resolve()
     if not path.is_file():
@@ -219,6 +219,26 @@ def run_recreation(evidence_json_path: str, target_lang: str = "ts", out_base_di
 
     envelope = EvidenceEnvelopeV2.model_validate(data)
     out_dir = Path(out_base_dir) if out_base_dir else path.parent.parent / "reconstructed" / target_lang
+
+    if envelope.clean_room_specification.get("backend"):
+        from rea_behavior import generate_executable
+        from rea_llm import BACKEND as NATIVE_BACKEND, generate_native
+        from rea_chat import BACKEND as CHAT_BACKEND, generate_chat
+        from rea_lift import BACKEND as BINARY_BACKEND, generate_binary
+        if envelope.clean_room_specification.get("backend") == BINARY_BACKEND:
+            if target_lang not in ("c", "py", "python"):
+                raise ValueError("Static binary recovery emits C plus a native executable")
+            return generate_binary(envelope, out_dir)
+        if target_lang not in ("py", "python"):
+            raise ValueError("The executable transducer backend emits Python; use --lang py")
+        if envelope.clean_room_specification.get("backend") == NATIVE_BACKEND:
+            return generate_native(envelope, out_dir)
+        if envelope.clean_room_specification.get("backend") == CHAT_BACKEND:
+            return generate_chat(envelope, out_dir)
+        return generate_executable(envelope, out_dir)
+
+    if not contracts_only:
+        raise ValueError("No executable model in evidence. Use reconstruct to learn from the original; contracts-only output must be explicitly requested.")
 
     if target_lang in ("ts", "typescript"):
         return synthesize_typescript(envelope, out_dir)
@@ -236,7 +256,7 @@ def main():
         sys.exit(1)
 
     evidence_path = sys.argv[1]
-    lang = "ts"
+    lang = "py"
     out_dir = None
 
     if "--lang" in sys.argv:
@@ -251,7 +271,7 @@ def main():
 
     print(f"[*] REA Recreator sintetizando Clean-Room desde: {evidence_path}")
     print(f"[*] Lenguaje objetivo: {lang.upper()}")
-    files = run_recreation(evidence_path, target_lang=lang, out_base_dir=out_dir)
+    files = run_recreation(evidence_path, target_lang=lang, out_base_dir=out_dir, contracts_only="--contracts-only" in sys.argv)
 
     print(f"\n[+] SÍNTESIS CLEAN-ROOM COMPLETADA ({len(files)} archivos generados):")
     for f in files:

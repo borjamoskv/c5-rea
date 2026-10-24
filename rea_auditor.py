@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """
-REA Auditor (Popperian Falsification & Parity Harness) - C5-REAL Ring-0.
-Contrasta de forma determinista la evidencia extraída en silicio (Evidence v2)
-contra la implementación sintetizada Clean-Room (TypeScript / Rust / Python).
-Certifica paridad del 100% de canales IPC y firmas de funciones, emitiendo un
-veredicto popperiano estricto (PASS o FAIL).
+Channel diagnostics and live functional verification.
+Channel names alone can only produce INCOMPLETE or FAIL. PASS is reserved for
+an independent executable tested against the pinned original process.
 """
 
 import sys
@@ -15,6 +13,30 @@ from pathlib import Path
 from typing import Dict, Any, List
 
 from evidence_schema import EvidenceEnvelopeV2
+
+
+def audit_reconstruction(envelope, artifact, seed=None, manage_reference=False):
+    """Only live differential execution may certify executable parity."""
+    from rea_behavior import BACKEND, audit_behavior
+    from rea_llm import BACKEND as NATIVE_BACKEND, audit_native
+    from rea_chat import BACKEND as CHAT_BACKEND, audit_chat
+    from rea_lift import BACKEND as BINARY_BACKEND, audit_binary
+    if envelope.clean_room_specification.get("backend") == BINARY_BACKEND:
+        return audit_binary(envelope, artifact, seed=seed)
+    if envelope.clean_room_specification.get("backend") == CHAT_BACKEND:
+        return audit_chat(envelope, artifact, seed=seed, manage_reference=manage_reference)
+    if envelope.clean_room_specification.get("backend") == NATIVE_BACKEND:
+        return audit_native(envelope, artifact, seed=seed, manage_reference=manage_reference)
+    if envelope.clean_room_specification.get("backend") == BACKEND:
+        return audit_behavior(envelope, artifact, seed=seed)
+    if Path(artifact).suffix == ".ts":
+        return audit_typescript_parity(envelope, Path(artifact))
+    if Path(artifact).suffix == ".rs":
+        return audit_rust_parity(envelope, Path(artifact))
+    return {
+        "status": "INCOMPLETE", "coverage_percent": 0.0,
+        "reason": "NO_EXECUTABLE_BEHAVIOR_SPECIFICATION",
+    }
 
 
 def audit_typescript_parity(envelope: EvidenceEnvelopeV2, ts_file: Path) -> Dict[str, Any]:
@@ -44,7 +66,9 @@ def audit_typescript_parity(envelope: EvidenceEnvelopeV2, ts_file: Path) -> Dict
     coverage = (found / total * 100.0) if total > 0 else 100.0
 
     return {
-        "status": "PASS" if not missing else "FAIL",
+        "status": "INCOMPLETE" if not missing else "FAIL",
+        "scope": "channel-name diagnostic only; no behavior has been executed",
+        "reason": "NO_LIVE_DIFFERENTIAL_VERIFICATION",
         "total_expected": total,
         "total_verified": found,
         "coverage_percent": round(coverage, 2),
@@ -78,7 +102,9 @@ def audit_rust_parity(envelope: EvidenceEnvelopeV2, rs_file: Path) -> Dict[str, 
     coverage = (found / total * 100.0) if total > 0 else 100.0
 
     return {
-        "status": "PASS" if not missing else "FAIL",
+        "status": "INCOMPLETE" if not missing else "FAIL",
+        "scope": "channel-name diagnostic only; no behavior has been executed",
+        "reason": "NO_LIVE_DIFFERENTIAL_VERIFICATION",
         "total_expected": total,
         "total_verified": found,
         "coverage_percent": round(coverage, 2),
@@ -102,29 +128,15 @@ def main():
         data = json.load(f)
     envelope = EvidenceEnvelopeV2.model_validate(data)
 
-    if reconstructed_path.suffix == ".ts":
-        audit = audit_typescript_parity(envelope, reconstructed_path)
-    elif reconstructed_path.suffix == ".rs":
-        audit = audit_rust_parity(envelope, reconstructed_path)
-    else:
-        print(f"[-] Formato no soportado para auditoría: {reconstructed_path.suffix}")
-        sys.exit(1)
+    audit = audit_reconstruction(envelope, reconstructed_path)
 
     print("\n[+] DICTAMEN DE AUDITORÍA POPPERIANA:")
     print(f"  - Veredicto:         {audit['status']}")
-    print(f"  - Cobertura:         {audit['coverage_percent']}% ({audit['total_verified']}/{audit['total_expected']} canales)")
-    if audit['missing_channels']:
-        print(f"  - Canales Faltantes: {len(audit['missing_channels'])}")
-        for ch in audit['missing_channels'][:5]:
-            print(f"      • {ch}")
-    else:
-        print("  - Certificación:     100% de paridad sin discrepancias detectadas.")
-
-    # Actualizar dictamen en el Evidence JSON
-    envelope.falsification_verdict = audit['status']
-    with open(evidence_path, "w") as f:
-        f.write(envelope.model_dump_json(indent=2))
-    print(f"\n[+] Veredicto {audit['status']} sellado en {evidence_path}")
+    print(f"  - Cobertura del alcance declarado: {audit['coverage_percent']}%")
+    print(f"  - Motivo: {audit.get('reason', 'MISSING_CHANNELS')}")
+    report_path = reconstructed_path.with_suffix(reconstructed_path.suffix + ".verification.json")
+    report_path.write_text(json.dumps(audit, indent=2))
+    print(f"  - Informe: {report_path}")
 
     sys.exit(0 if audit['status'] == "PASS" else 1)
 

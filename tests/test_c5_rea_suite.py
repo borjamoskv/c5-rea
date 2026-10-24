@@ -98,12 +98,12 @@ class TestC5ReaSuite(unittest.TestCase):
             self.assertIn('#[serde(rename = "auth:login")]', rs_content)
 
     def test_popperian_auditor_pass(self):
-        """El auditor debe certificar PASS con 100% de cobertura sobre síntesis válida."""
+        """Nombres presentes solo certifican cobertura estructural, no comportamiento."""
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir)
             synthesize_typescript(self.envelope, out_dir)
             audit = audit_typescript_parity(self.envelope, out_dir / "ipc_contracts.ts")
-            self.assertEqual(audit["status"], "PASS")
+            self.assertEqual(audit["status"], "INCOMPLETE")
             self.assertEqual(audit["coverage_percent"], 100.0)
             self.assertEqual(len(audit["missing_channels"]), 0)
 

@@ -9,3 +9,10 @@ build/
 unpacked/
 wheels/
 .DS_Store
+
+# Local environment; retain a shareable template
+.env
+.env.*
+!.env.example
+c5_system_mcp_server.py
+

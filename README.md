@@ -4,18 +4,18 @@
 
 # C5-REA: Clean-Room Reverse Engineering & Existence-Gap Firewall for AI Agents
 
-### Dissect any native binary or Electron `.asar` in `<15ms`. Compress structural evidence by `2,900×` (`67 KB` vs `176 MB`). Synthesize Clean-Room contracts in TypeScript, Rust & Python with `0%` LLM hallucinations.
+### Extract structural evidence from supported native binaries and Electron `.asar` bundles, synthesize contracts, and verify supported executable behavior separately.
 
-[![Zero Dependencies](https://img.shields.io/badge/Dependencies-0_(Pure_Python_Stdlib)-00e676?style=flat-square)](#architectural-invariants--zero-dependency-design)
+[![Python Core](https://img.shields.io/badge/Python_core-stdlib-00e676?style=flat-square)](#capability-prerequisites)
 [![Existence Gap](https://img.shields.io/badge/Existence_Gap-0%25_Slopsquatting-38bdf8?style=flat-square)](#the-existence-gap-firewall-anti-slopsquatting--anti-slop)
-[![Popperian Parity](https://img.shields.io/badge/Popperian_Parity-100%25_Verified-f59e0b?style=flat-square)](#popperian-parity-auditor-100-contract-coverage)
+[![Verification](https://img.shields.io/badge/Contract_only-INCOMPLETE-f59e0b?style=flat-square)](#popperian-parity-auditor-100-contract-coverage)
 [![MCP Native](https://img.shields.io/badge/MCP-JSON--RPC_stdio_(%3C15ms)-a855f7?style=flat-square)](#mcp-server-integration-claude-code-cursor-antigravity-codex)
-[![Tests](https://img.shields.io/badge/Unit_Suite-8%2F8_PASS_(0.004s)-22c55e?style=flat-square)](#verification--test-suite)
+[![Tests](https://img.shields.io/badge/Tests-run_locally-22c55e?style=flat-square)](#verification--test-suite)
 [![License: MIT](https://img.shields.io/badge/License-MIT-f4c430?style=flat-square)](LICENSE)
 
 **By Borja Fernández Angulo (`borjamoskv`)** — *Complex Systems Researcher*
 
-[Why C5-REA?](#why-c5-rea-the-two-catastrophic-walls-of-ai-agents) · [Benchmarks](#benchmark-silicon-reality-vs-npm-wrappers) · [Architecture](#system-topology--clean-room-pipeline) · [Quick Start](#30-second-quick-start-zero-dependencies) · [Case Studies](#included-empirical-case-studies-in-repo-evidence) · [Existence-Gap Firewall](#the-existence-gap-firewall-anti-slopsquatting--anti-slop) · [MCP Server](#mcp-server-integration-claude-code-cursor-antigravity-codex)
+[Why C5-REA?](#why-c5-rea-the-two-catastrophic-walls-of-ai-agents) · [Benchmarks](#benchmark-silicon-reality-vs-npm-wrappers) · [Architecture](#system-topology--clean-room-pipeline) · [Quick Start](#quick-start-python-core) · [Case Studies](#included-empirical-case-studies-in-repo-evidence) · [Existence-Gap Firewall](#the-existence-gap-firewall-anti-slopsquatting--anti-slop) · [MCP Server](#mcp-server-integration-claude-code-cursor-antigravity-codex)
 
 </div>
 
@@ -29,7 +29,7 @@ Every engineer using autonomous coding agents (Claude Code, Cursor, Antigravity,
 2. **The Existence Gap (Vibe-Coding Slop & Slopsquatting):** When an LLM reconstructs interfaces or system modules without a deterministic harness, it hallucinates non-existent packages (*slopsquatting*, e.g., `import openai_magic`), leaves hollow `pass` / `// ... rest of existing code` truncation stubs, or silently drops 40% of the target's IPC channels.
 
 > [!IMPORTANT]
-> **`C5-REA` resolves both failure modes in pure silicon (`0` external dependencies, `100%` Python 3.9+ Standard Library, `<15ms` latency per stage).** Instead of feeding raw binary mud to an LLM, `C5-REA` extracts a mathematically bounded **Kolmogorov Evidence Envelope (`EvidenceEnvelopeV2`)**, synthesizes zero-blob Clean-Room code, and subjects every output file to **Popperian Falsification**.
+> **The Python core uses the standard library; optional capabilities require external tools as listed below.** `EvidenceEnvelopeV2` retains structural evidence and synthesized contracts. Channel coverage and existence-gap checks are diagnostics; behavioral `PASS` requires supported live differential verification.
 
 ---
 
@@ -42,7 +42,7 @@ flowchart TD
         A2["Native Binary (Mach-O Universal / ARM64 / x86_64)"]
     end
 
-    subgraph Kernel["2. C5-REA Pure Stdlib Microkernel (<15 ms · 0 Deps)"]
+    subgraph Kernel["2. C5-REA Python Stdlib Core"]
         B1["rea_orchestrator.py\nSHA-256 · Shannon Entropy H(X) · Packer Gate"]
         B2["rea_unpacker.py\n16-Byte LE Header Stream · Surgical IPC & URL Scan"]
         B3["rea_decompiler.py\notool/nm Static Disassembly · ARM64 CFG & Xrefs"]
@@ -59,7 +59,7 @@ flowchart TD
     end
 
     subgraph Firewall["5. Popperian Falsification & Existence-Gap Gate"]
-        E1["rea_auditor.py\n100% IPC Channel Parity Verification"]
+        E1["rea_auditor.py\nChannel Diagnostics / Live Behavior Verification"]
         E2["existence_gate.py\n0% Slopsquatting · 0% Phantom Imports · 0% Stubs"]
     end
 
@@ -78,19 +78,31 @@ Measured on **Apple Silicon (MacBook Pro M3 Pro, Darwin ARM64)** inspecting a pr
 
 | Metric | Legacy npm Wrappers (`rea-agents` / AST Dumpers) | `C5-REA` (Pure Stdlib Microkernel) | Exergy Gain |
 | :--- | :--- | :--- | :--- |
-| **External Dependencies** | 400+ npm packages (~380 MB `node_modules`) | **`0` (100% Pure Python 3.9+ Stdlib)** | **$\infty$ (Zero Supply-Chain Risk)** |
+| **External Dependencies** | 400+ npm packages (~380 MB `node_modules`) | **`0` (100% Pure Python 3.9+ Stdlib)** | **Python core only; external tools have separate dependencies** |
 | **`app.asar` Unpack & IPC Index** | ~14.20 s (Full disk extraction & I/O thrashing) | **`0.012 s` (In-Memory Pickle Header Seek)** | **`1,183×` Faster** |
 | **LLM Context Payload** | ~176,000 KB (Context Window Overflow) | **`67.6 KB` (`EvidenceEnvelopeV2` JSON)** | **`2,603×` Token Compression** |
 | **Clean-Room Synthesis** | Probabilistic LLM prompt (unbounded drift) | **Deterministic AST/Template Transducer** | **Zero Proprietary Blobs** |
-| **Contract Parity Guarantee** | None (Manual review required) | **Popperian Falsification (`100.0% PASS`)** | **100% Deterministic** |
+| **Contract Parity Guarantee** | None (Manual review required) | **100% channel coverage remains `INCOMPLETE` without live behavior verification** | **Separate structural and behavioral evidence** |
 | **Anti-Slopsquatting Firewall** | None | **`existence-gap` AST & Manifest Gate** | **0% Hallucinated Packages** |
 | **Unit Test Suite Execution** | Seconds to minutes (Jest/ts-node overhead) | **`0.004 s – 0.035 s` (8 core unit tests)** | **Sub-millisecond per test** |
 
 ---
 
-## 30-Second Quick Start (Zero Dependencies)
+## Capability prerequisites
 
-No `npm install`. No `pip install` virtual-environment bloat. Clone and run directly on macOS or Linux with Python 3.9+:
+| Capability | Required tools / dependencies | Verification scope |
+| :--- | :--- | :--- |
+| Python core, contract synthesis, channel diagnostics | Python 3.9+ standard library; no third-party Python packages | Structural evidence and static diagnostics |
+| Native Mach-O analysis | Platform analysis utilities such as `otool` and `nm` | Static native observations; not executable parity |
+| JavaScript AST recovery | Caller-provided Node.js and explicit toolchain containing `@babel/parser`, `@babel/generator`, `@babel/types` and `package-lock.json` | Generated output remains unverified behavior |
+| Native lifting | clang and backend/platform-specific analysis and execution tools | Only supported live differential checks may produce behavioral `PASS` |
+| Generated Rust contracts | serde in the consuming Rust project | Generated interfaces, not a standalone verified implementation |
+
+No Node/Babel or clang version support matrix is established here; the caller must provision and validate the selected toolchain. Recording a lockfile hash identifies an input, not a universal compatibility guarantee. Historical benchmark figures above describe their reported setup; they do not guarantee latency, resource use, or dependency counts for optional capabilities or current environments.
+
+## Quick Start (Python core)
+
+The core Python workflows require no third-party Python packages. Clone and run with Python 3.9+; native analysis and optional recovery require the tools listed below.
 
 ```bash
 git clone https://github.com/borjamoskv/c5-rea.git
@@ -110,7 +122,7 @@ cd c5-rea
 ./c5_rea_cli.py synthesize evidence/evidence_92c9211a2182.json --lang rust
 ./c5_rea_cli.py synthesize evidence/evidence_92c9211a2182.json --lang py
 
-# 5. Popperian Parity Falsification (Certifies 100.0% IPC channel coverage in TS and Rust)
+# 5. Channel diagnostics (INCOMPLETE even at 100% coverage; nonzero CLI exit)
 ./c5_rea_cli.py audit evidence/evidence_92c9211a2182.json reconstructed/ts/ipc_contracts.ts
 ./c5_rea_cli.py audit evidence/evidence_92c9211a2182.json reconstructed/rust/ipc_contracts.rs
 
@@ -197,7 +209,9 @@ Ingests `EvidenceEnvelopeV2` and emits 100% clean-room interfaces containing **z
 
 Treats every synthesized contract as a falsifiable hypothesis. The auditor scans the generated `.ts` or `.rs` artifact against every channel recorded in `EvidenceEnvelopeV2`:
 - Any omitted channel immediately triggers `status = "FAIL"` with an explicit list of `missing_channels`.
-- Only `100.0%` coverage seals `falsification_verdict = "PASS"` back into the evidence JSON.
+- Complete channel-name coverage returns `INCOMPLETE`, including at `100.0%`; it does not execute or certify behavior. A Python contract without an executable behavior specification is also `INCOMPLETE`.
+- `PASS` is reserved for supported executable backends verified through live differential execution against the pinned original. `existence-gap` has a separate `PASS`/`FAIL` verdict for its static checks.
+- The audit CLI exits nonzero for `INCOMPLETE` as well as `FAIL`; do not weaken the verifier to obtain a successful exit for contract-only synthesis.
 
 ---
 
@@ -271,7 +285,7 @@ This repository includes two complete, reproducible forensic envelopes in [`evid
      - TypeScript (`2,084 lines`): [`reconstructed/ts/ipc_contracts.ts`](reconstructed/ts/ipc_contracts.ts)
      - Rust (`790 lines`): [`reconstructed/rust/ipc_contracts.rs`](reconstructed/rust/ipc_contracts.rs)
      - Python (`267 lines`): [`reconstructed/py/ipc_contracts.py`](reconstructed/py/ipc_contracts.py)
-   - **Popperian Audit Verdict:** `PASS (100.0% coverage — 259/259 channels verified)`.
+   - **Historical structural coverage:** `259/259` channel names were reported. Under current verdict semantics, channel coverage alone is `INCOMPLETE`; this case study does not establish live behavioral parity.
 
 ---
 
@@ -282,16 +296,20 @@ This repository includes two complete, reproducible forensic envelopes in [`evid
 | `triage <target>` | Path to binary or `.app` bundle | Computes SHA-256, architecture, Shannon entropy $H(X)$, dylibs, and packer status. |
 | `unpack <asar>` | Path to `app.asar` | Scans Electron ASAR header in memory and extracts IPC channels & remote URLs. |
 | `decompile <binary>` | `[--max N]` (default `5`) | Disassembles Mach-O functions, counts CFG nodes, and resolves outgoing `xrefs_out`. |
-| `synthesize <evidence>` | `[--lang ts\|rust\|py] [--out DIR]` | Generates clean-room contracts from an `EvidenceEnvelopeV2` JSON file. |
-| `audit <evidence> <contract>` | Evidence `.json` + `.ts`/`.rs` file | Runs Popperian parity falsification and seals the verdict into the evidence JSON. |
+| `synthesize <evidence>` | `[--lang ts\|rust\|py\|c] [--out DIR] [--contracts-only]` | Generates executable implementations from learned evidence or diagnostic contracts (`--contracts-only`); outputs `GENERATED_UNVERIFIED`. |
+| `audit <evidence> <contract>` | `[--report PATH] [--seed N] [--manage-reference]` | Reports channel diagnostics (`INCOMPLETE`/`FAIL`) or supported live executable verification (`PASS` only with differential evidence), and records the verdict. |
+| `reconstruct` | `--out DIR -- <executable> [args...]` | Learns a stateful byte-stream transducer (`rea_behavior.py`) from a real executable and verifies live differential parity. |
+| `reconstruct-binary <original>` | `--out DIR [--seed N] [--public-abi JSON]` | Lifts supported ARM64 Mach-O instructions (`rea_lift.py`) to C, compiles via `clang`, and runs live OS-isolated differential checks. |
+| `recover-javascript <original>` | `--out DIR --toolchain DIR [--node BIN]` | Recovers AST and constant string tables (`rea_javascript.py` + `rea_js_recover.cjs`); exits nonzero (`INCOMPLETE`) as AST recovery alone does not certify application parity. |
+| `reconstruct-lmstudio` | `--model-file GGUF --model-id ID --library DYLIB --headers DIR --out DIR [--chat-api] [--advanced] [--renderer DYLIB] [--manage-reference]` | Synthesizes native GGUF inference (`rea_llm.py`) or HTTP/SSE chat servers (`rea_chat.py` + `rea_chat_worker.cpp`) and runs live differential comparisons against LM Studio. |
 | `existence-gap <target>` | File or directory path | Scans `.py`, `.ts`, `.tsx`, `.js`, and `.rs` files for slopsquatting, phantom imports & stubs. |
-| `serve` | *(stdin/stdout JSON-RPC 2.0)* | Launches the zero-latency MCP server over `stdio` (protocol `2024-11-05`). |
+| `serve` | *(stdin/stdout JSON-RPC 2.0)* | Launches the MCP server over `stdio` (protocol `2024-11-05`). |
 
 ---
 
 ## MCP Server Integration (Claude Code, Cursor, Antigravity, Codex)
 
-Register `C5-REA` as a universal, zero-latency `stdio` MCP server in your agent's configuration (`mcp_config.json` / `claude_desktop_config.json` / `.cursor/mcp.json`):
+Register `C5-REA` as a `stdio` MCP server in your agent's configuration (`mcp_config.json` / `claude_desktop_config.json` / `.cursor/mcp.json`):
 
 ```json
 {
@@ -304,15 +322,19 @@ Register `C5-REA` as a universal, zero-latency `stdio` MCP server in your agent'
 }
 ```
 
-### Exposed MCP Tools (`<15ms` per call):
+### Exposed MCP Tools:
 
 | MCP Tool Name | Input Parameters | Returned Payload |
 | :--- | :--- | :--- |
 | `rea_triage` | `target_path: string` | Full `BinaryTriageReport` JSON (SHA-256, arch, Shannon entropy, dylibs, symbols). |
 | `rea_inspect_asar` | `asar_path: string` | In-memory Electron `.asar` index: file count, `package.json`, IPC channels, URLs. |
 | `rea_decompile_cfg` | `binary_path: string`, `max_functions?: int` | Array of `FunctionEvidence` objects with ARM64 disassembly, CFG node counts & `xrefs_out`. |
-| `rea_synthesize` | `evidence_path: string`, `lang?: "ts"\|"rust"\|"py"` | Clean-room contract synthesis report with generated file paths. |
-| `rea_audit_parity` | `evidence_path: string`, `contract_path: string` | Popperian parity verdict (`PASS`/`FAIL`), coverage percentage, and missing channels. |
+| `rea_synthesize` | `evidence_path: string`, `lang?: "ts"\|"rust"\|"py"\|"c"`, `contracts_only?: bool` | Synthesis report (`GENERATED_UNVERIFIED`) with generated file paths. |
+| `rea_reconstruct` | `original_argv: string[]`, `output_directory: string` | Learned byte-stream transducer implementation and live differential verification report. |
+| `rea_reconstruct_binary` | `original_path: string`, `output_directory: string`, `seed?: int`, `public_abi?: string` | ARM64 Mach-O to C lifted executable and live differential verification verdict. |
+| `rea_recover_javascript` | `original_path: string`, `output_directory: string`, `toolchain: string`, `node?: string` | AST/string table recovery summary (`INCOMPLETE`; never certifies full application parity). |
+| `rea_reconstruct_lmstudio` | `model_file: string`, `model_id: string`, `library: string`, `headers: string`, `output_directory: string`, `chat_api?: bool`, `advanced?: bool`, `renderer?: string`, `manage_reference?: bool` | Native GGUF / Chat SSE executable synthesis and live differential verification against LM Studio. |
+| `rea_audit_parity` | `evidence_path: string`, `contract_path: string`, `report_path?: string`, `seed?: int`, `manage_reference?: bool` | Verification verdict (`PASS`/`FAIL`/`INCOMPLETE`), coverage and missing channels; contract-only coverage never gives behavioral `PASS`. |
 | `rea_existence_gap` | `target_path: string` | Existence-Gap report (`PASS`/`FAIL`, `slop_percentage`, line-by-line AST violations). |
 
 ---
@@ -331,10 +353,10 @@ For multi-agent orchestrators, [`subagents/`](subagents/) defines 5 least-privil
 
 ## Verification & Test Suite
 
-Run the deterministic unit test suite and self-audit gate in `<0.04s`:
+Run the unit test suite (`tests/test_*.py`: core suite, behavioral verification, ARM64 binary recovery, chat SSE protocol, JavaScript AST recovery, and native GGUF inference guards) and static self-audit separately. Runtime depends on the selected tests, capability prerequisites and host:
 
 ```bash
-# 1. Execute all 8 unit & parity tests (entropy, SHA-256, TS/Rust synthesis, Popperian falsification, Existence-Gap)
+# 1. Execute the full unit & differential regression suite (51 tests across 6 test modules)
 python3 -m unittest discover -s tests -p "test_*.py" -v
 
 # 2. Run Existence-Gap self-audit on the repository itself (0 violations required)
@@ -347,9 +369,9 @@ python3 c5_rea_cli.py existence-gap .
 
 Frente a los envoltorios comerciales inflados en Node.js (`npx rea-agents`) que arrastran más de 400 paquetes de npm y desbordan la ventana de contexto del LLM con volcados crudos de **176 MB**, **C5-REA** implementa una arquitectura de **Sala Limpia (Clean-Room)** gobernada por tres invariantes físicas:
 
-1. **Cero Dependencias Externas (Pure Python 3.9+ Stdlib):** Inmunidad total frente a ataques de cadena de suministro (*supply-chain attacks*) y *slopsquatting*.
+1. **Núcleo Python 3.9+ sin paquetes externos:** Las capacidades opcionales necesitan herramientas externas: Node.js/Babel para recuperación JavaScript y clang/herramientas de plataforma para lifting nativo; los contratos Rust generados usan serde.
 2. **Compresión de Kolmogorov (`EvidenceEnvelopeV2`):** Destilación en memoria (`<15 ms`) de paquetes Electron `.asar` y binarios nativos Mach-O en sobres estructurales de **~60 KB** (`2,900×` menos tokens).
-3. **Falsación Popperiana y Firewall de Brecha de Existencia (`existence_gate.py`):** Ningún contrato sintetizado (`.ts`, `.rs`, `.py`) se da por válido sin certificar un **100% de paridad de canales IPC** (`c5-rea audit`) y **0% de código alucinado, imports fantasma o funciones huecas** (`c5-rea existence-gap`).
+3. **Veredictos separados:** La cobertura completa de nombres IPC en contratos TS/Rust sigue siendo `INCOMPLETE`; sin especificación ejecutable, un contrato Python también es `INCOMPLETE`. `PASS` de comportamiento exige verificación diferencial en vivo para un backend compatible. El `PASS` de `existence-gap` solo certifica sus comprobaciones estáticas.
 
 ---
 
@@ -357,12 +379,12 @@ Frente a los envoltorios comerciales inflados en Node.js (`npx rea-agents`) que 
 
 传统的逆向工程与 AI 辅助分析工具（如 `rea-agents` 或全量 AST 导出器）通常依赖 **400 多个 npm 软件包**，需要将整个 Electron `.asar` 解压到磁盘，并向大语言模型注入高达 **176 MB** 的原始 JSON 数据——这不仅会瞬间撑爆上下文窗口，还会导致严重的幻觉与代码截断。
 
-**C5-REA** 采用 **100% Python 标准库（零外部依赖）** 构建，专为 AI 编程代理（Claude Code、Cursor、Antigravity、Codex）打造：
+**C5-REA** 的 Python 核心仅使用标准库；可选 JavaScript 恢复需要 Node.js/Babel，原生 lifting 需要 clang 和平台工具，生成的 Rust 合约使用 serde。
 
 - **15 毫秒内存级解析（Zero-Disk Unpacking）**：直接读取 16 字节 Chromium Pickle 二进制头部，在内存中毫秒级提取 Electron `app.asar` 的所有 IPC 通信契约与 Mach-O 原生控制流图（CFG）。
 - **2,900 倍柯尔莫哥洛夫上下文压缩**：通过结构化证据信封（`EvidenceEnvelopeV2`）将百兆级二进制噪声浓缩为 **~60 KB** 的高信噪比架构契约。
 - **净室重构（Clean-Room Synthesis）**：自动生成零专有代码污染的 **TypeScript、Rust 与 Python** 强类型接口契约。
-- **波普尔证伪与反幻觉防火墙（Existence-Gap Gate）**：100% 确定性验证 IPC 契约对齐度，并通过 AST 静态分析自动拦截大模型捏造的幽灵依赖包（Slopsquatting）、未声明导入与空壳函数桩（Hollow Stubs）。
+- **验证状态**：IPC 名称覆盖率达到 100% 仍为 `INCOMPLETE`，缺少通道则为 `FAIL`。行为 `PASS` 仅用于受支持后端的实时差分验证；`existence-gap` 的 `PASS` 只适用于静态检查。
 
 ---
 

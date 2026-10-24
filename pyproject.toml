@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "c5-rea"
 version = "1.0.0"
-description = "Zero-Dependency Clean-Room Reverse Engineering & Existence-Gap Firewall for AI Agents (<15ms, 60KB Kolmogorov Context)."
+description = "Clean-Room Reverse Engineering & Existence-Gap Firewall with a Python stdlib core and capability-specific external tools."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
