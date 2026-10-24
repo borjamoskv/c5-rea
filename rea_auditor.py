@@ -21,14 +21,20 @@ def audit_reconstruction(envelope, artifact, seed=None, manage_reference=False):
     from rea_llm import BACKEND as NATIVE_BACKEND, audit_native
     from rea_chat import BACKEND as CHAT_BACKEND, audit_chat
     from rea_lift import BACKEND as BINARY_BACKEND, audit_binary
-    if envelope.clean_room_specification.get("backend") == BINARY_BACKEND:
+    from rea_javascript import verify_js_handlers_live
+    spec = envelope.clean_room_specification
+    if spec.get("backend") == BINARY_BACKEND:
         return audit_binary(envelope, artifact, seed=seed)
-    if envelope.clean_room_specification.get("backend") == CHAT_BACKEND:
+    if spec.get("backend") == CHAT_BACKEND:
         return audit_chat(envelope, artifact, seed=seed, manage_reference=manage_reference)
-    if envelope.clean_room_specification.get("backend") == NATIVE_BACKEND:
+    if spec.get("backend") == NATIVE_BACKEND:
         return audit_native(envelope, artifact, seed=seed, manage_reference=manage_reference)
-    if envelope.clean_room_specification.get("backend") == BACKEND:
+    if spec.get("backend") == BACKEND:
         return audit_behavior(envelope, artifact, seed=seed)
+    if spec.get("backend") == "javascript-ipc-handler-v1":
+        orig = spec.get("original_module")
+        cases = spec.get("test_cases", [])
+        return verify_js_handlers_live(orig, artifact, cases)
     if Path(artifact).suffix == ".ts":
         return audit_typescript_parity(envelope, Path(artifact))
     if Path(artifact).suffix == ".rs":

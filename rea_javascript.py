@@ -66,3 +66,52 @@ def recover_javascript(original, directory, toolchain, node='node', timeout=180)
         summary['reason'] = 'RECOVERY_TOOL_CHANGED_DURING_RUN'
     save()
     return summary
+
+
+def verify_js_handlers_live(original_module, candidate_module, test_cases, node='node', timeout=30):
+    """Ejecuta una batería diferencial estricta en un arnés aislado de Node.js."""
+    orig_path = Path(original_module).resolve()
+    cand_path = Path(candidate_module).resolve()
+    if not orig_path.is_file():
+        return {'status': 'FAIL', 'reason': f'ORIGINAL_MODULE_NOT_FOUND: {orig_path}', 'verified_cases': 0}
+    if not cand_path.is_file():
+        return {'status': 'FAIL', 'reason': f'CANDIDATE_MODULE_NOT_FOUND: {cand_path}', 'verified_cases': 0}
+
+    harness = """
+const path = require('path');
+const orig = require(path.resolve(process.argv[1]));
+const cand = require(path.resolve(process.argv[2]));
+const inputs = JSON.parse(process.argv[3]);
+
+const results = [];
+for (const item of inputs) {
+    let origRes, candRes, origErr, candErr;
+    try { origRes = orig.handleIpc(item.channel, item.payload); } catch(e) { origErr = e.message; }
+    try { candRes = cand.handleIpc(item.channel, item.payload); } catch(e) { candErr = e.message; }
+    const match = (origRes !== undefined && candRes !== undefined)
+        ? JSON.stringify(origRes) === JSON.stringify(candRes)
+        : (origErr !== undefined && origErr === candErr);
+    results.push({ channel: item.channel, match, origRes, candRes, origErr, candErr });
+}
+console.log(JSON.stringify({ all_match: results.length > 0 && results.every(r => r.match), results }));
+"""
+    try:
+        run = subprocess.run(
+            [str(node), '-e', harness, str(orig_path), str(cand_path), json.dumps(test_cases)],
+            capture_output=True, text=True, timeout=timeout
+        )
+        if run.returncode != 0:
+            return {'status': 'FAIL', 'reason': 'NODE_HARNESS_ERROR: ' + run.stderr.strip(), 'verified_cases': 0}
+        report = json.loads(run.stdout)
+        all_match = report.get('all_match', False)
+        passed = sum(1 for r in report.get('results', []) if r.get('match'))
+        return {
+            'status': 'PASS' if all_match else 'FAIL',
+            'total_cases': len(test_cases),
+            'verified_cases': passed,
+            'coverage_percent': 100.0 if all_match else round(passed / len(test_cases) * 100.0, 2) if test_cases else 0.0,
+            'reason': 'LIVE_DIFFERENTIAL_MATCH' if all_match else 'OUTPUT_DIVERGENCE_DETECTED',
+            'cases': report.get('results', [])
+        }
+    except Exception as exc:
+        return {'status': 'FAIL', 'reason': f'EXECUTION_EXCEPTION: {str(exc)}', 'verified_cases': 0}

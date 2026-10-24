@@ -84,5 +84,73 @@ function decode(n){const a=table();return decode=function(i){return a[i]},decode
         self.assertEqual(result['folded_decoder_calls'], 1)
 
 
+@unittest.skipUnless(shutil.which('node'), 'Requires Node.js runtime')
+class JavascriptLiveHarnessTests(unittest.TestCase):
+    def test_live_handler_verification_pass(self):
+        from rea_javascript import verify_js_handlers_live
+        from evidence_schema import EvidenceEnvelopeV2, BinaryTriageReport
+        from rea_auditor import audit_reconstruction
+
+        orig_js = """
+        function handleIpc(channel, payload) {
+            if (channel === 'calc:add') return { sum: payload.a + payload.b };
+            if (channel === 'calc:echo') return { text: payload.msg };
+            throw new Error('UNKNOWN_CHANNEL');
+        }
+        module.exports = { handleIpc };
+        """
+        cand_js = orig_js  # Identical behavioral implementation
+
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp)
+            orig_file = p / 'orig.js'
+            cand_file = p / 'cand.js'
+            orig_file.write_text(orig_js)
+            cand_file.write_text(cand_js)
+
+            cases = [
+                {'channel': 'calc:add', 'payload': {'a': 5, 'b': 7}},
+                {'channel': 'calc:echo', 'payload': {'msg': 'hello world'}},
+                {'channel': 'unknown:ch', 'payload': {}}
+            ]
+
+            # Direct harness execution
+            result = verify_js_handlers_live(orig_file, cand_file, cases)
+            self.assertEqual(result['status'], 'PASS')
+            self.assertEqual(result['verified_cases'], 3)
+            self.assertEqual(result['coverage_percent'], 100.0)
+
+            # Integration with rea_auditor.audit_reconstruction
+            envelope = EvidenceEnvelopeV2(
+                target=BinaryTriageReport(str(orig_file), '0'*64, 100, 'js', 0),
+                clean_room_specification={
+                    'backend': 'javascript-ipc-handler-v1',
+                    'original_module': str(orig_file),
+                    'test_cases': cases
+                }
+            )
+            audit = audit_reconstruction(envelope, cand_file)
+            self.assertEqual(audit['status'], 'PASS')
+            self.assertEqual(audit['reason'], 'LIVE_DIFFERENTIAL_MATCH')
+
+    def test_live_handler_verification_detects_divergence(self):
+        from rea_javascript import verify_js_handlers_live
+
+        orig_js = "module.exports = { handleIpc: (ch, p) => ({ res: p.x * 2 }) };"
+        cand_js = "module.exports = { handleIpc: (ch, p) => ({ res: p.x * 3 }) };"
+
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp)
+            orig_file = p / 'orig.js'
+            cand_file = p / 'cand.js'
+            orig_file.write_text(orig_js)
+            cand_file.write_text(cand_js)
+
+            cases = [{'channel': 'math:op', 'payload': {'x': 10}}]
+            result = verify_js_handlers_live(orig_file, cand_file, cases)
+            self.assertEqual(result['status'], 'FAIL')
+            self.assertEqual(result['reason'], 'OUTPUT_DIVERGENCE_DETECTED')
+
+
 if __name__ == '__main__':
     unittest.main()
