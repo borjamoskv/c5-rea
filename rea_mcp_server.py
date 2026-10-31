@@ -67,6 +67,19 @@ def handle_tools_list(msg_id: Any) -> Dict[str, Any]:
                     }
                 },
                 {
+                    "name": "rea_orchestrate",
+                    "description": "Ejecuta el pipeline forense completo sobre un binario o paquete .app/.asar y retorna el EvidenceEnvelopeV2 consolidado.",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "target_path": {"type": "string", "description": "Ruta al binario o bundle .app"},
+                            "max_functions": {"type": "integer", "default": 8, "description": "Máximo de funciones nativas con CFG (default: 8)"},
+                            "out_dir": {"type": "string", "description": "Directorio opcional donde guardar el dossier JSON"}
+                        },
+                        "required": ["target_path"]
+                    }
+                },
+                {
                     "name": "rea_inspect_asar",
                     "description": "Auditoría forense in-memory de paquetes Electron app.asar y canales IPC (<15ms).",
                     "inputSchema": {
@@ -203,6 +216,19 @@ def handle_tools_call(msg_id: Any, params: Dict[str, Any]) -> Dict[str, Any]:
         if tool_name == "rea_triage":
             report = run_triage(args["target_path"])
             text = report.model_dump_json(indent=2)
+        elif tool_name == "rea_orchestrate":
+            from rea_orchestrator import orchestrate_target
+            max_f = args.get("max_functions", 8)
+            out_d = Path(args["out_dir"]).resolve() if args.get("out_dir") else None
+            envelope, out_file = orchestrate_target(args["target_path"], max_functions=max_f, out_dir=out_d)
+            text = json.dumps({
+                "status": "ORCHESTRATED",
+                "target": envelope.target.target_path,
+                "dossier_path": str(out_file),
+                "ipc_channels_count": len(envelope.ipc_channels),
+                "native_functions_count": len(envelope.native_functions),
+                "envelope": envelope.model_dump(),
+            }, indent=2)
         elif tool_name == "rea_inspect_asar":
             audit = audit_electron_asar(args["asar_path"])
             text = json.dumps(audit, indent=2)

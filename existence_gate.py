@@ -66,6 +66,8 @@ def _discover_declared_dependencies(root_dir: Path) -> Set[str]:
                 for k in data.get(section, {}).keys():
                     declared.add(k)
                     declared.add(k.split("/")[0])
+            for k in data.get("imports", {}).keys():
+                declared.add(k)
         except Exception:
             pass
 
@@ -187,37 +189,55 @@ def audit_ts_or_rust_file(file_path: Path, root_dir: Path) -> Dict[str, Any]:
     node_builtins = {
         "fs", "path", "os", "crypto", "http", "https", "url", "util", "stream",
         "events", "child_process", "worker_threads", "net", "tls", "zlib", "assert",
-        "buffer", " electron", "electron",
+        "buffer", "electron", "process", "timers", "module", "v8", "perf_hooks",
+        "constants", "wasi", "diagnostics_channel", "trace_events", "async_hooks",
+        "string_decoder", "punycode", "querystring", "readline", "repl", "dgram",
+        "cluster", "dns",
     }
 
     for idx, line in enumerate(content.splitlines(), start=1):
+        sline = line.strip()
         for pat in TRUNCATION_MARKERS:
             if pat.search(line):
                 violations.append({
                     "type": "LLM_TRUNCATION_MARKER",
                     "line": idx,
-                    "detail": f"Lazy LLM truncation placeholder detected: {line.strip()}",
+                    "detail": f"Lazy LLM truncation placeholder detected: {sline}",
                 })
 
         if file_path.suffix in (".ts", ".tsx", ".js", ".mjs"):
+            # Skip single-line comments and block comment boundaries
+            if sline.startswith("//") or sline.startswith("*") or sline.startswith("/*"):
+                continue
             m = re.search(r'(?:from|require\()\s*["\']([^"\']+)["\']', line)
             if m:
-                pkg = m.group(1)
-                if not pkg.startswith(".") and not pkg.startswith("/") and not pkg.startswith("node:"):
-                    base_pkg = pkg.split("/")[0] if not pkg.startswith("@") else "/".join(pkg.split("/")[:2])
-                    for pat in SLOPSQUAT_PATTERNS:
-                        if pat.match(base_pkg):
-                            violations.append({
-                                "type": "SLOPSQUATTING_RISK",
-                                "line": idx,
-                                "detail": f"Suspected hallucinated npm package: '{base_pkg}'",
-                            })
-                    if declared and base_pkg not in declared and base_pkg not in node_builtins:
+                pkg = m.group(1).strip()
+                if (
+                    pkg.startswith(".")
+                    or pkg.startswith("/")
+                    or pkg.startswith("node:")
+                    or pkg.startswith("http:")
+                    or pkg.startswith("https:")
+                    or pkg.startswith("file:")
+                    or pkg.startswith("data:")
+                    or "${" in pkg
+                    or pkg in (" : ", ", ")
+                ):
+                    continue
+                base_pkg = pkg.split("/")[0] if not pkg.startswith("@") else "/".join(pkg.split("/")[:2])
+                for pat in SLOPSQUAT_PATTERNS:
+                    if pat.match(base_pkg):
                         violations.append({
-                            "type": "UNDECLARED_OR_PHANTOM_IMPORT",
+                            "type": "SLOPSQUATTING_RISK",
                             "line": idx,
-                            "detail": f"Package '{base_pkg}' is not declared in package.json or Node builtins.",
+                            "detail": f"Suspected hallucinated npm package: '{base_pkg}'",
                         })
+                if declared and base_pkg not in declared and base_pkg not in node_builtins:
+                    violations.append({
+                        "type": "UNDECLARED_OR_PHANTOM_IMPORT",
+                        "line": idx,
+                        "detail": f"Package '{base_pkg}' is not declared in package.json or Node builtins.",
+                    })
 
     return {
         "file": str(file_path),

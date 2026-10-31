@@ -44,16 +44,16 @@ def extract_function_cfg(binary_path: str, max_functions: int = 10) -> List[Func
     """Desensambla funciones, calcula nodos CFG y extrae xrefs salientes."""
     evidence_list = []
     
-    # Ejecutar otool para obtener el desensamblado con símbolos
+    # Ejecutar otool para obtener el desensamblado con símbolos (priorizando ARM64)
+    cmd = ["otool", "-arch", "arm64", "-tvV", binary_path]
     try:
-        disasm_raw = subprocess.check_output(
-            ["otool", "-tvV", binary_path],
-            stderr=subprocess.DEVNULL,
-            text=True
-        )
-    except Exception as e:
-        print(f"[-] Error ejecutando otool: {e}")
-        return []
+        disasm_raw = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, text=True)
+    except Exception:
+        try:
+            disasm_raw = subprocess.check_output(["otool", "-tvV", binary_path], stderr=subprocess.DEVNULL, text=True)
+        except Exception as e:
+            print(f"[-] Error ejecutando otool: {e}")
+            return []
 
     lines = disasm_raw.splitlines()
     current_func: Optional[Dict[str, Any]] = None
@@ -106,8 +106,12 @@ def extract_function_cfg(binary_path: str, max_functions: int = 10) -> List[Func
             current_func["end_addr"] = f"0x{addr_str}"
             current_func["instructions"].append(f"0x{addr_str}\t{opcode}\t{operands}")
 
-            # CFG basic blocks: branches aumentan nodos de control de flujo
-            if opcode.startswith('b') or opcode in ('cbz', 'cbnz', 'tbz', 'tbnz'):
+            # CFG basic blocks: ramas condicionales e incondicionales aumentan nodos de control
+            is_branch = (
+                opcode in ('b', 'bl', 'blr', 'br', 'cbz', 'cbnz', 'tbz', 'tbnz')
+                or opcode.startswith('b.')
+            )
+            if is_branch:
                 current_func["cfg_nodes"] += 1
 
             # Extracción de xrefs salientes

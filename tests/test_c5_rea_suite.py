@@ -21,9 +21,10 @@ from evidence_schema import (
     MemoryOffset,
     FunctionEvidence,
 )
-from rea_orchestrator import calculate_entropy, calculate_sha256, run_triage
+from rea_orchestrator import calculate_entropy, calculate_sha256, run_triage, orchestrate_target
 from rea_recreator import synthesize_typescript, synthesize_rust, synthesize_python
-from rea_auditor import audit_typescript_parity, audit_rust_parity
+from rea_auditor import audit_typescript_parity, audit_rust_parity, audit_python_parity, audit_reconstruction
+from rea_mcp_server import handle_tools_call
 from existence_gate import run_existence_gap_audit
 
 
@@ -97,6 +98,60 @@ class TestC5ReaSuite(unittest.TestCase):
             self.assertIn('pub enum IpcChannel', rs_content)
             self.assertIn('#[serde(rename = "auth:login")]', rs_content)
 
+    def test_clean_room_python_synthesis(self):
+        """Verificar que el sintetizador Python genera enums, dataclasses tipadas y protocolos en stdlib."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out_dir = Path(tmp_dir)
+            files = synthesize_python(self.envelope, out_dir)
+            self.assertEqual(len(files), 2)
+            ipc_content = (out_dir / "ipc_contracts.py").read_text()
+            self.assertIn('class IpcChannel(str, Enum):', ipc_content)
+            self.assertIn('AUTH_LOGIN = "auth:login"', ipc_content)
+            self.assertIn('class AuthLoginRequest:', ipc_content)
+            self.assertIn('class AuthLoginResponse:', ipc_content)
+            self.assertIn('class IpcDispatcher(Protocol):', ipc_content)
+
+            native_content = (out_dir / "native_contracts.py").read_text()
+            self.assertIn('Sub100000a00Contract(Protocol):', native_content)
+            self.assertIn('memory_offset: str = "0x100000a00"', native_content)
+
+    def test_asar_ipc_comprehensive_regex(self):
+        """Verificar que el extractor forense IPC detecta canales complejos (. / $) y métodos avanzados."""
+        import re
+        ipc_pattern = re.compile(
+            r'(?P<target>ipcRenderer|ipcMain|webContents)\s*\.\s*'
+            r'(?P<method>send|sendSync|postMessage|invoke|on|once|handle|handleOnce|removeHandler|removeAllListeners)'
+            r'\s*\(\s*[\'"](?P<channel>[a-zA-Z0-9_\-:\.\/\$]+)[\'"]'
+        )
+        sample_code = """
+        ipcRenderer.invoke('app.window.close', { force: true });
+        ipcRenderer.sendSync('workspace/open', id);
+        ipcMain.handleOnce('audio:start-buffer', async () => {});
+        ipcMain.on('user$profile', (e) => {});
+        """
+        matches = {m.group("channel"): (m.group("target"), m.group("method")) for m in ipc_pattern.finditer(sample_code)}
+        self.assertIn('app.window.close', matches)
+        self.assertIn('workspace/open', matches)
+        self.assertIn('audio:start-buffer', matches)
+        self.assertIn('user$profile', matches)
+        self.assertEqual(matches['app.window.close'], ('ipcRenderer', 'invoke'))
+        self.assertEqual(matches['workspace/open'], ('ipcRenderer', 'sendSync'))
+        self.assertEqual(matches['audio:start-buffer'], ('ipcMain', 'handleOnce'))
+
+    def test_arm64_branch_precision(self):
+        """Verificar que solo las ramas reales de ARM64 incrementan el CFG, evitando falsos positivos como bfi/bic."""
+        def is_arm64_branch(opcode: str) -> bool:
+            return (
+                opcode in ('b', 'bl', 'blr', 'br', 'cbz', 'cbnz', 'tbz', 'tbnz')
+                or opcode.startswith('b.')
+            )
+        # Ramas válidas
+        for op in ('b', 'bl', 'blr', 'br', 'cbz', 'cbnz', 'tbz', 'tbnz', 'b.eq', 'b.ne', 'b.gt', 'b.lt'):
+            self.assertTrue(is_arm64_branch(op), f"Debe reconocer {op} como rama")
+        # Opcodes que no son ramas
+        for op in ('bfi', 'bfxil', 'bic', 'brk', 'add', 'sub', 'ldr', 'str'):
+            self.assertFalse(is_arm64_branch(op), f"No debe reconocer {op} como rama")
+
     def test_popperian_auditor_pass(self):
         """Nombres presentes solo certifican cobertura estructural, no comportamiento."""
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -137,6 +192,73 @@ class TestC5ReaSuite(unittest.TestCase):
         res = run_existence_gap_audit(str(suite_dir))
         self.assertEqual(res["verdict"], "PASS")
         self.assertEqual(res["total_violations"], 0)
+
+    def test_existence_gap_ts_comment_and_uri_precision(self):
+        """El Existence-Gap Gate ignora comentarios, URIs y built-ins en TS/JS."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            ts_file = Path(tmp_dir) / "clean.ts"
+            ts_file.write_text(
+                "// import phantom from 'unreal-pkg';\n"
+                "/* require('fake-pkg'); */\n"
+                "import { spawn } from 'child_process';\n"
+                "import process from 'process';\n"
+                "const url = 'https://example.com/api';\n"
+                "const scheme = require('node:fs');\n"
+            )
+            res = run_existence_gap_audit(str(ts_file))
+            self.assertEqual(res["verdict"], "PASS")
+            self.assertEqual(res["total_violations"], 0)
+
+    def test_audit_python_parity_pass_and_fail(self):
+        """Verificar paridad estática de contratos Python (INCOMPLETE al 100%, FAIL si faltan canales)."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out_dir = Path(tmp_dir)
+            synthesize_python(self.envelope, out_dir)
+            py_file = out_dir / "ipc_contracts.py"
+
+            # 1. Con 100% de canales debe retornar INCOMPLETE (conforme a AGENTS.md: contratos solos no dan PASS)
+            audit = audit_python_parity(self.envelope, py_file)
+            self.assertEqual(audit["status"], "INCOMPLETE")
+            self.assertEqual(audit["coverage_percent"], 100.0)
+            self.assertEqual(len(audit["missing_channels"]), 0)
+
+            # Verificar que audit_reconstruction despacha correctamente al auditor de Python
+            rec_audit = audit_reconstruction(self.envelope, py_file)
+            self.assertEqual(rec_audit["status"], "INCOMPLETE")
+            self.assertEqual(rec_audit["coverage_percent"], 100.0)
+
+            # 2. Con canal faltante debe retornar FAIL
+            bad_file = out_dir / "bad_contracts.py"
+            bad_file.write_text('class IpcChannel:\n    AUTH_LOGIN = "auth:login"\n')
+            bad_audit = audit_python_parity(self.envelope, bad_file)
+            self.assertEqual(bad_audit["status"], "FAIL")
+            self.assertIn("audio:playback-start", bad_audit["missing_channels"])
+            self.assertIn("window:minimize", bad_audit["missing_channels"])
+
+    def test_orchestrate_target_and_mcp_tool(self):
+        """Verificar pipeline orchestrate_target y herramienta MCP rea_orchestrate sobre binario real."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out_dir = Path(tmp_dir)
+            # Invocación directa del orquestador
+            envelope, out_file = orchestrate_target("/bin/ls", max_functions=2, out_dir=out_dir)
+            self.assertTrue(out_file.exists())
+            self.assertEqual(envelope.target.target_path, "/bin/ls")
+            self.assertGreater(envelope.target.file_size_bytes, 0)
+            self.assertGreaterEqual(len(envelope.native_functions), 1)
+
+            # Invocación a través del despachador de herramientas MCP
+            mcp_res = handle_tools_call(42, {
+                "name": "rea_orchestrate",
+                "arguments": {
+                    "target_path": "/bin/ls",
+                    "max_functions": 2,
+                    "out_dir": str(out_dir),
+                }
+            })
+            self.assertFalse(mcp_res["result"]["isError"])
+            content_json = json.loads(mcp_res["result"]["content"][0]["text"])
+            self.assertEqual(content_json["status"], "ORCHESTRATED")
+            self.assertEqual(content_json["target"], "/bin/ls")
 
 
 if __name__ == "__main__":

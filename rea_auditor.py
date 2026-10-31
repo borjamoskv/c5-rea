@@ -39,6 +39,13 @@ def audit_reconstruction(envelope, artifact, seed=None, manage_reference=False):
         return audit_typescript_parity(envelope, Path(artifact))
     if Path(artifact).suffix == ".rs":
         return audit_rust_parity(envelope, Path(artifact))
+    if Path(artifact).suffix == ".py":
+        if not Path(artifact).is_file():
+            return {
+                "status": "INCOMPLETE", "coverage_percent": 0.0,
+                "reason": "NO_EXECUTABLE_BEHAVIOR_SPECIFICATION",
+            }
+        return audit_python_parity(envelope, Path(artifact))
     return {
         "status": "INCOMPLETE", "coverage_percent": 0.0,
         "reason": "NO_EXECUTABLE_BEHAVIOR_SPECIFICATION",
@@ -99,6 +106,48 @@ def audit_rust_parity(envelope: EvidenceEnvelopeV2, rs_file: Path) -> Dict[str, 
 
     for ch in expected_channels:
         pattern = re.compile(rf'rename\s*=\s*["\']{re.escape(ch)}["\']')
+        if pattern.search(content):
+            found += 1
+        else:
+            missing.append(ch)
+
+    total = len(expected_channels)
+    coverage = (found / total * 100.0) if total > 0 else 100.0
+
+    return {
+        "status": "INCOMPLETE" if not missing else "FAIL",
+        "scope": "channel-name diagnostic only; no behavior has been executed",
+        "reason": "NO_LIVE_DIFFERENTIAL_VERIFICATION",
+        "total_expected": total,
+        "total_verified": found,
+        "coverage_percent": round(coverage, 2),
+        "missing_channels": missing,
+    }
+
+
+def audit_python_parity(envelope: EvidenceEnvelopeV2, py_file: Path) -> Dict[str, Any]:
+    """Valida paridad exacta de canales IPC en ipc_contracts.py.
+    
+    Conforme a AGENTS.md, un contrato de diagnóstico de canales sin especificación
+    de comportamiento ejecutable diferencial devuelve INCOMPLETE (incluso con 100% de
+    cobertura) y FAIL si faltan canales.
+    """
+    if not py_file.is_file():
+        return {
+            "status": "FAIL",
+            "reason": f"Archivo de contratos no encontrado: {py_file}",
+            "missing_channels": [ch.channel for ch in envelope.ipc_channels],
+            "coverage_percent": 0.0,
+        }
+
+    content = py_file.read_text(encoding="utf-8")
+    expected_channels = [ch.channel for ch in envelope.ipc_channels]
+    missing = []
+    found = 0
+
+    for ch in expected_channels:
+        # Busca la presencia de la cadena exacta del canal en el archivo (ej. = "auth:login")
+        pattern = re.compile(rf'=\s*["\']{re.escape(ch)}["\']')
         if pattern.search(content):
             found += 1
         else:

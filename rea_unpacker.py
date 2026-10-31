@@ -18,27 +18,30 @@ from typing import Dict, Any, List, Tuple
 def scan_asar(asar_path: str) -> Tuple[List[Tuple[str, int, int]], int, Any]:
     """Lee la cabecera binaria de 16 bytes y devuelve el árbol de archivos in-memory."""
     f = open(asar_path, 'rb')
-    data = f.read(16)
-    if len(data) < 16:
+    try:
+        data = f.read(16)
+        if len(data) < 16:
+            raise ValueError("Archivo ASAR truncado o inválido (< 16 bytes)")
+        
+        u1, u2, header_size, json_size = struct.unpack('<IIII', data)
+        header_json_bytes = f.read(json_size)
+        header = json.loads(header_json_bytes.decode('utf-8'))
+        header_offset = 16 + json_size
+
+        def find_files(node, path=''):
+            res = []
+            if 'files' in node:
+                for k, v in node['files'].items():
+                    res.extend(find_files(v, f'{path}/{k}' if path else k))
+            else:
+                res.append((path, node.get('size', 0), node.get('offset', 0)))
+            return res
+
+        files = find_files(header)
+        return files, header_offset, f
+    except Exception:
         f.close()
-        raise ValueError("Archivo ASAR truncado o inválido (< 16 bytes)")
-    
-    u1, u2, header_size, json_size = struct.unpack('<IIII', data)
-    header_json_bytes = f.read(json_size)
-    header = json.loads(header_json_bytes.decode('utf-8'))
-    header_offset = 16 + json_size
-
-    def find_files(node, path=''):
-        res = []
-        if 'files' in node:
-            for k, v in node['files'].items():
-                res.extend(find_files(v, f'{path}/{k}' if path else k))
-        else:
-            res.append((path, node.get('size', 0), node.get('offset', 0)))
-        return res
-
-    files = find_files(header)
-    return files, header_offset, f
+        raise
 
 
 def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
@@ -50,6 +53,7 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
         "total_files": len(files),
         "package_json": None,
         "ipc_channels": [],
+        "ipc_details": [],
         "remote_endpoints": [],
         "stat_size_bytes": os.path.getsize(asar_path)
     }
@@ -67,10 +71,15 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
                 break
 
         # 2. Escanear canales IPC y endpoints en módulos JavaScript (< 500 KB)
-        ipc_pattern = re.compile(r'(?:ipcRenderer|ipcMain)\s*\.\s*(?:send|on|handle|invoke)\s*\(\s*[\'"]([a-zA-Z0-9_\-:]+)[\'"]')
+        ipc_pattern = re.compile(
+            r'(?P<target>ipcRenderer|ipcMain|webContents)\s*\.\s*'
+            r'(?P<method>send|sendSync|postMessage|invoke|on|once|handle|handleOnce|removeHandler|removeAllListeners)'
+            r'\s*\(\s*[\'"](?P<channel>[a-zA-Z0-9_\-:\.\/\$]+)[\'"]'
+        )
         url_pattern = re.compile(r'https?://[a-zA-Z0-9_\-\.]+\.[a-zA-Z]{2,}(?:/[^\s\'"<]*)?')
 
         found_ipc = set()
+        ipc_details = []
         found_urls = set()
 
         for path, size, offset in files:
@@ -79,9 +88,29 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
                 content = f.read(size).decode('utf-8', errors='ignore')
 
                 # IPC
-                matches = ipc_pattern.findall(content)
-                for m in matches:
-                    found_ipc.add(m)
+                for m in ipc_pattern.finditer(content):
+                    target = m.group("target")
+                    method = m.group("method")
+                    ch = m.group("channel")
+                    found_ipc.add(ch)
+
+                    # Determinar dirección operacional
+                    if target == "ipcRenderer" and method in ("send", "sendSync", "invoke", "postMessage"):
+                        direction = "r2m"
+                    elif target in ("ipcMain", "webContents") and method in ("send", "postMessage"):
+                        direction = "m2r"
+                    elif target == "ipcMain" and method in ("handle", "handleOnce", "on", "once"):
+                        direction = "main_handler"
+                    else:
+                        direction = "renderer_listener"
+
+                    ipc_details.append({
+                        "channel": ch,
+                        "direction": direction,
+                        "target": target,
+                        "method": method,
+                        "file": path
+                    })
 
                 # URLs (filtrando localhost y namespaces de schema)
                 urls = url_pattern.findall(content)
@@ -90,6 +119,7 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
                         found_urls.add(u)
 
         result["ipc_channels"] = sorted(list(found_ipc))
+        result["ipc_details"] = ipc_details
         result["remote_endpoints"] = sorted(list(found_urls))[:20]
 
     finally:

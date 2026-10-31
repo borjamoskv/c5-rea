@@ -12,7 +12,7 @@ import hashlib
 import json
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Tuple
 
 from evidence_schema import (
     BinaryTriageReport,
@@ -129,28 +129,17 @@ def run_triage(target_path: str) -> BinaryTriageReport:
     )
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("Uso: python3 rea_orchestrator.py <ruta_del_binario_o_app>")
-        sys.exit(1)
-
-    target = sys.argv[1]
-    print(f"[*] REA Orchestrator iniciando sobre: {target}")
-    triage = run_triage(target)
-    print("\n[+] REPORTE DE TRIAGE (Nivel 0):")
-    print(f"  - Binario:      {triage.target_path}")
-    print(f"  - SHA-256:      {triage.sha256}")
-    print(f"  - Tamaño:       {triage.file_size_bytes} bytes")
-    print(f"  - Arquitectura: {triage.architecture}")
-    print(f"  - Entropía:     {triage.entropy_shannon} bits/byte")
-    print(f"  - Empaquetado:  {triage.is_packed} ({triage.packer_type or 'Nativo/Descomprimido'})")
-    print(f"  - Dylibs:       {len(triage.imported_libraries)} detectadas")
-    print(f"  - Símbolos:     {triage.exported_symbols_count} exportados")
-
+def orchestrate_target(
+    target_path: str,
+    max_functions: int = 8,
+    out_dir: Optional[Path] = None
+) -> Tuple[EvidenceEnvelopeV2, Path]:
+    """Ejecuta el pipeline forense completo y genera el sobre de evidencia consolidado."""
+    triage = run_triage(target_path)
     envelope = EvidenceEnvelopeV2(target=triage)
 
     # Detección y extracción automática de Electron ASAR si existe
-    target_p = Path(target).resolve()
+    target_p = Path(target_path).resolve()
     asar_candidate = None
     if target_p.suffix == ".asar":
         asar_candidate = target_p
@@ -160,34 +149,79 @@ def main():
             asar_candidate = candidate
 
     if asar_candidate:
-        print(f"\n[*] Detectado bundle Electron. Auditando in-memory: {asar_candidate}")
         asar_audit = audit_electron_asar(str(asar_candidate))
-        print(f"[+] Total archivos indexados en ASAR: {asar_audit['total_files']}")
-        print(f"[+] Canales IPC detectados: {len(asar_audit['ipc_channels'])}")
-        for ch in asar_audit['ipc_channels']:
+        details_by_channel: Dict[str, List[Dict[str, Any]]] = {}
+        for item in asar_audit.get("ipc_details", []):
+            ch = item.get("channel")
+            if ch:
+                details_by_channel.setdefault(ch, []).append(item)
+
+        for ch in asar_audit.get("ipc_channels", []):
+            details = details_by_channel.get(ch, [])
+            directions = {d.get("direction") for d in details if d.get("direction")}
+            sender_locs = {d.get("file") for d in details if d.get("file") and d.get("direction") in ("r2m", "m2r")}
+            handler_locs = {d.get("file") for d in details if d.get("file") and d.get("direction") in ("main_handler", "renderer_listener")}
+
+            if "r2m" in directions and "m2r" in directions:
+                direction = "bi_directional"
+            elif "r2m" in directions or "main_handler" in directions:
+                direction = "r2m"
+            elif "m2r" in directions or "renderer_listener" in directions:
+                direction = "m2r"
+            else:
+                direction = "inferred_bi_directional"
+
+            sender_loc = sorted(list(sender_locs))[0] if sender_locs else str(asar_candidate)
+            handler_loc = sorted(list(handler_locs))[0] if handler_locs else None
+
             envelope.ipc_channels.append(
                 IPCEvidence(
                     channel=ch,
-                    direction="inferred_bi_directional",
-                    sender_location=str(asar_candidate),
-                    payload_schema={}
+                    direction=direction,
+                    sender_location=sender_loc,
+                    handler_location=handler_loc,
+                    payload_schema={},
                 )
             )
 
     # Extracción y descompilación estática de funciones nativas
-    if Path(triage.target_path).is_file():
-        print(f"\n[*] Descompilando funciones nativas (Mach-O CFG)...")
-        native_funcs = extract_function_cfg(triage.target_path, max_functions=8)
+    if Path(triage.target_path).is_file() and max_functions > 0:
+        native_funcs = extract_function_cfg(triage.target_path, max_functions=max_functions)
         envelope.native_functions = native_funcs
-        print(f"[+] Funciones descompiladas con CFG y xrefs: {len(native_funcs)}")
 
-    evidence_dir = Path(__file__).parent / "evidence"
-    evidence_dir.mkdir(exist_ok=True)
+    evidence_dir = out_dir if out_dir else Path(__file__).parent / "evidence"
+    evidence_dir.mkdir(parents=True, exist_ok=True)
     out_file = evidence_dir / f"evidence_{triage.sha256[:12]}.json"
-    with open(out_file, "w") as f:
-        f.write(envelope.model_dump_json(indent=2))
+    out_file.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
 
-    print(f"\n[+] Dossier de Evidencia v2 consolidado en: {out_file}")
+    return envelope, out_file
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Uso: python3 rea_orchestrator.py <ruta_del_binario_o_app> [max_funciones] [out_dir]")
+        sys.exit(1)
+
+    target = sys.argv[1]
+    max_funcs = int(sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2].isdigit() else 8
+    out_dir = Path(sys.argv[3]).resolve() if len(sys.argv) > 3 else None
+
+    print(f"[*] REA Orchestrator iniciando sobre: {target}")
+    envelope, out_file = orchestrate_target(target, max_functions=max_funcs, out_dir=out_dir)
+    triage = envelope.target
+
+    print("\n[+] REPORTE DE TRIAGE (Nivel 0):")
+    print(f"  - Binario:      {triage.target_path}")
+    print(f"  - SHA-256:      {triage.sha256}")
+    print(f"  - Tamaño:       {triage.file_size_bytes} bytes")
+    print(f"  - Arquitectura: {triage.architecture}")
+    print(f"  - Entropía:     {triage.entropy_shannon} bits/byte")
+    print(f"  - Empaquetado:  {triage.is_packed} ({triage.packer_type or 'Nativo/Descomprimido'})")
+    print(f"  - Dylibs:       {len(triage.imported_libraries)} detectadas")
+    print(f"  - Símbolos:     {triage.exported_symbols_count} exportados")
+    print(f"\n[+] CANALES IPC ENRIQUECIDOS: {len(envelope.ipc_channels)}")
+    print(f"[+] FUNCIONES NATIVAS (CFG):  {len(envelope.native_functions)}")
+    print(f"[+] Dossier de Evidencia v2 consolidado en: {out_file}")
 
 
 if __name__ == "__main__":

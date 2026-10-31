@@ -9,7 +9,7 @@ import os
 import argparse
 from pathlib import Path
 
-from rea_orchestrator import run_triage, inspect_mach_o
+from rea_orchestrator import run_triage, inspect_mach_o, orchestrate_target
 from rea_unpacker import audit_electron_asar
 from rea_decompiler import extract_function_cfg
 from rea_recreator import run_recreation
@@ -29,6 +29,13 @@ def main():
     # Subcomando triage
     p_triage = subparsers.add_parser("triage", help="Triage no invasivo de binarios o bundles")
     p_triage.add_argument("target", help="Ruta al binario o bundle .app")
+
+    # Subcomando orchestrate
+    p_orch = subparsers.add_parser("orchestrate", help="Ejecutar el pipeline forense completo y generar el dossier de evidencia")
+    p_orch.add_argument("target", help="Ruta al binario o bundle .app")
+    p_orch.add_argument("--max", type=int, default=8, help="Número máximo de funciones CFG a descompilar (default: 8)")
+    p_orch.add_argument("--out", default=None, help="Directorio donde guardar el dossier JSON")
+    p_orch.add_argument("--json", action="store_true", help="Emitir el EvidenceEnvelopeV2 completo en JSON a stdout")
 
     # Subcomando unpack
     p_unpack = subparsers.add_parser("unpack", help="Auditoría forense in-memory de ASAR Electron")
@@ -100,6 +107,17 @@ def main():
     if args.command == "triage":
         report = run_triage(args.target)
         print(f"[+] Triage completado: {report.architecture}, {report.entropy_shannon} bits/byte, {report.file_size_bytes} bytes")
+    elif args.command == "orchestrate":
+        out_dir = Path(args.out).resolve() if args.out else None
+        envelope, out_file = orchestrate_target(args.target, max_functions=args.max, out_dir=out_dir)
+        if args.json:
+            print(envelope.model_dump_json(indent=2))
+        else:
+            print(f"[+] Orquestación completada exitosamente:")
+            print(f"  - Target:       {envelope.target.target_path}")
+            print(f"  - Canales IPC:  {len(envelope.ipc_channels)} descubiertos")
+            print(f"  - Funciones CFG: {len(envelope.native_functions)} descompiladas")
+            print(f"  - Dossier v2:   {out_file}")
     elif args.command == "unpack":
         audit = audit_electron_asar(args.asar)
         print(f"[+] ASAR indexado: {audit['total_files']} archivos, {len(audit['ipc_channels'])} canales IPC")
