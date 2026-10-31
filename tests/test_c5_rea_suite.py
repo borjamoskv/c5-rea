@@ -260,6 +260,44 @@ class TestC5ReaSuite(unittest.TestCase):
             self.assertEqual(content_json["status"], "ORCHESTRATED")
             self.assertEqual(content_json["target"], "/bin/ls")
 
+    def test_asar_preload_bridge_and_orchestrator_strings(self):
+        """Verificar extracción de contextBridge, módulos .mjs/.cjs y poblado de extracted_strings."""
+        import struct
+        from rea_unpacker import audit_electron_asar
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_p = Path(tmp_dir)
+            preload_code = (
+                b"const { contextBridge, ipcRenderer } = require('electron');\n"
+                b"contextBridge.exposeInMainWorld('sovereignBridge', {\n"
+                b"  ping: () => ipcRenderer.invoke('bridge:ping'),\n"
+                b"});\n"
+                b"const endpoint = 'https://api.babylon60.com/v1/health';\n"
+            )
+            header_dict = {
+                "files": {
+                    "preload.cjs": {"size": len(preload_code), "offset": "0"}
+                }
+            }
+            header_bytes = json.dumps(header_dict).encode("utf-8")
+            asar_file = tmp_p / "app.asar"
+            with open(asar_file, "wb") as f:
+                f.write(struct.pack("<IIII", 4, len(header_bytes) + 8, len(header_bytes) + 4, len(header_bytes)))
+                f.write(header_bytes)
+                f.write(preload_code)
+
+            audit = audit_electron_asar(str(asar_file))
+            self.assertIn("bridge:ping", audit["ipc_channels"])
+            self.assertIn("sovereignBridge", audit["preload_bridges"])
+            self.assertIn("https://api.babylon60.com/v1/health", audit["remote_endpoints"])
+
+            envelope, _ = orchestrate_target(str(asar_file), max_functions=0, out_dir=tmp_p)
+            self.assertIn("https://api.babylon60.com/v1/health", envelope.extracted_strings)
+            self.assertIn("contextBridge:sovereignBridge", envelope.extracted_strings)
+            self.assertEqual(len(envelope.ipc_channels), 1)
+            self.assertEqual(envelope.ipc_channels[0].channel, "bridge:ping")
+            self.assertEqual(envelope.ipc_channels[0].direction, "r2m")
+
 
 if __name__ == "__main__":
     unittest.main()

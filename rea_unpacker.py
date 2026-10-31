@@ -54,6 +54,7 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
         "package_json": None,
         "ipc_channels": [],
         "ipc_details": [],
+        "preload_bridges": [],
         "remote_endpoints": [],
         "stat_size_bytes": os.path.getsize(asar_path)
     }
@@ -70,20 +71,24 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
                     pass
                 break
 
-        # 2. Escanear canales IPC y endpoints en módulos JavaScript (< 500 KB)
+        # 2. Escanear canales IPC, contextBridge y endpoints en módulos JavaScript (< 500 KB)
         ipc_pattern = re.compile(
             r'(?P<target>ipcRenderer|ipcMain|webContents)\s*\.\s*'
             r'(?P<method>send|sendSync|postMessage|invoke|on|once|handle|handleOnce|removeHandler|removeAllListeners)'
             r'\s*\(\s*[\'"](?P<channel>[a-zA-Z0-9_\-:\.\/\$]+)[\'"]'
         )
+        bridge_pattern = re.compile(
+            r'contextBridge\s*\.\s*exposeInMainWorld\s*\(\s*[\'"](?P<api_key>[a-zA-Z0-9_\-\$]+)[\'"]'
+        )
         url_pattern = re.compile(r'https?://[a-zA-Z0-9_\-\.]+\.[a-zA-Z]{2,}(?:/[^\s\'"<]*)?')
 
         found_ipc = set()
         ipc_details = []
+        found_bridges = set()
         found_urls = set()
 
         for path, size, offset in files:
-            if (path.endswith('.js') or path.endswith('.json')) and size < 500000:
+            if path.endswith(('.js', '.mjs', '.cjs', '.json')) and size < 500000:
                 f.seek(header_offset + int(offset))
                 content = f.read(size).decode('utf-8', errors='ignore')
 
@@ -112,6 +117,10 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
                         "file": path
                     })
 
+                # Preload contextBridge APIs
+                for bm in bridge_pattern.finditer(content):
+                    found_bridges.add(bm.group("api_key"))
+
                 # URLs (filtrando localhost y namespaces de schema)
                 urls = url_pattern.findall(content)
                 for u in urls:
@@ -120,6 +129,7 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
 
         result["ipc_channels"] = sorted(list(found_ipc))
         result["ipc_details"] = ipc_details
+        result["preload_bridges"] = sorted(list(found_bridges))
         result["remote_endpoints"] = sorted(list(found_urls))[:20]
 
     finally:

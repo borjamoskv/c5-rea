@@ -184,6 +184,11 @@ def orchestrate_target(
                 )
             )
 
+        extracted_strs = list(asar_audit.get("remote_endpoints", []))
+        for bridge_key in asar_audit.get("preload_bridges", []):
+            extracted_strs.append(f"contextBridge:{bridge_key}")
+        envelope.extracted_strings = extracted_strs
+
     # Extracción y descompilación estática de funciones nativas
     if Path(triage.target_path).is_file() and max_functions > 0:
         native_funcs = extract_function_cfg(triage.target_path, max_functions=max_functions)

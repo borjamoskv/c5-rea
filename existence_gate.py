@@ -205,7 +205,7 @@ def audit_ts_or_rust_file(file_path: Path, root_dir: Path) -> Dict[str, Any]:
                     "detail": f"Lazy LLM truncation placeholder detected: {sline}",
                 })
 
-        if file_path.suffix in (".ts", ".tsx", ".js", ".mjs"):
+        if file_path.suffix in (".ts", ".tsx", ".cts", ".mts", ".js", ".mjs", ".cjs"):
             # Skip single-line comments and block comment boundaries
             if sline.startswith("//") or sline.startswith("*") or sline.startswith("/*"):
                 continue
@@ -264,7 +264,7 @@ def run_existence_gap_audit(target_path: str) -> Dict[str, Any]:
     if target.is_file():
         files_to_scan.append(target)
     elif target.is_dir():
-        for ext in ("*.py", "*.ts", "*.tsx", "*.js", "*.rs"):
+        for ext in ("*.py", "*.ts", "*.tsx", "*.cts", "*.mts", "*.js", "*.mjs", "*.cjs", "*.rs"):
             for f in target.rglob(ext):
                 if "__pycache__" not in f.parts and "node_modules" not in f.parts and ".git" not in f.parts:
                     files_to_scan.append(f)
