@@ -227,6 +227,7 @@ def handle_tools_call(msg_id: Any, params: Dict[str, Any]) -> Dict[str, Any]:
                 "dossier_path": str(out_file),
                 "ipc_channels_count": len(envelope.ipc_channels),
                 "native_functions_count": len(envelope.native_functions),
+                "electron_fuses": envelope.target.electron_fuses,
                 "envelope": envelope.model_dump(),
             }, indent=2)
         elif tool_name == "rea_inspect_asar":

@@ -227,6 +227,7 @@ def main():
     print(f"  - Empaquetado:  {triage.is_packed} ({triage.packer_type or 'Nativo/Descomprimido'})")
     print(f"  - Dylibs:       {len(triage.imported_libraries)} detectadas")
     print(f"  - Símbolos:     {triage.exported_symbols_count} exportados")
+    print(f"  - Fuses v1:     {len(triage.electron_fuses)} detectados")
     print(f"\n[+] CANALES IPC ENRIQUECIDOS: {len(envelope.ipc_channels)}")
     print(f"[+] FUNCIONES NATIVAS (CFG):  {len(envelope.native_functions)}")
     print(f"[+] Dossier de Evidencia v2 consolidado en: {out_file}")
