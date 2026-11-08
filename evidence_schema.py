@@ -98,6 +98,7 @@ class BinaryTriageReport(_SchemaBase):
     packer_type: Optional[str] = None
     imported_libraries: List[str] = field(default_factory=list)
     exported_symbols_count: int = 0
+    electron_fuses: Dict[str, str] = field(default_factory=dict)
     triage_timestamp: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
@@ -116,6 +117,7 @@ class BinaryTriageReport(_SchemaBase):
             packer_type=data.get("packer_type"),
             imported_libraries=list(data.get("imported_libraries", [])),
             exported_symbols_count=int(data.get("exported_symbols_count", 0)),
+            electron_fuses=dict(data.get("electron_fuses", {})),
             triage_timestamp=str(
                 data.get("triage_timestamp", datetime.now(timezone.utc).isoformat())
             ),

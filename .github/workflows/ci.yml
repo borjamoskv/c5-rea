@@ -33,7 +33,7 @@ jobs:
         npm init -y
         npm install --silent @babel/generator@^7.26.0 @babel/parser@^7.26.0 @babel/types@^7.26.0
 
-    - name: Run Full Deterministic Unit & Differential Suite (51/51 tests)
+    - name: Run Full Deterministic Unit & Differential Suite (61/61 tests)
       env:
         C5_REA_JS_TOOLCHAIN: /tmp/c5_js_toolchain
       run: |

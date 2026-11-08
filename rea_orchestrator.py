@@ -111,6 +111,8 @@ def run_triage(target_path: str) -> BinaryTriageReport:
     sha256 = calculate_sha256(actual_binary)
     size_bytes = actual_binary.stat().st_size
     mach_info = inspect_mach_o(actual_binary)
+    from rea_unpacker import inspect_electron_fuses
+    fuses = inspect_electron_fuses(str(actual_binary))
 
     # Heurística de empaquetador (entropía > 7.2 suele indicar compresión/cifrado UPX)
     is_packed = entropy > 7.3
@@ -126,6 +128,7 @@ def run_triage(target_path: str) -> BinaryTriageReport:
         packer_type=packer_type,
         imported_libraries=mach_info["dylibs"],
         exported_symbols_count=mach_info["symbols_count"],
+        electron_fuses=fuses,
     )
 
 

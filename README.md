@@ -356,7 +356,7 @@ For multi-agent orchestrators, [`subagents/`](subagents/) defines 5 least-privil
 Run the unit test suite (`tests/test_*.py`: core suite, behavioral verification, ARM64 binary recovery, chat SSE protocol, JavaScript AST recovery, and native GGUF inference guards) and static self-audit separately. Runtime depends on the selected tests, capability prerequisites and host:
 
 ```bash
-# 1. Execute the full unit & differential regression suite (51 tests across 6 test modules)
+# 1. Execute the full unit & differential regression suite (61 tests across 6 test modules)
 python3 -m unittest discover -s tests -p "test_*.py" -v
 
 # 2. Run Existence-Gap self-audit on the repository itself (0 violations required)

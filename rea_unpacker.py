@@ -138,6 +138,59 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
     return result
 
 
+ELECTRON_FUSE_SENTINEL = b"dL7pKGdnNz796PbbjQWNKmHXBZaB9tsX"
+ELECTRON_FUSE_V1_NAMES = (
+    "RunAsNode",
+    "EnableCookieEncryption",
+    "EnableNodeOptionsEnvironmentVariable",
+    "EnableNodeCliInspectArguments",
+    "EnableEmbeddedAsarIntegrityValidation",
+    "OnlyLoadAppFromAsar",
+    "LoadBrowserProcessSpecificV8Snapshot",
+    "GrantFileProtocolExtraPrivileges",
+    "WasmTrapHandlers",
+)
+ELECTRON_FUSE_STATES = {
+    0x30: "disabled",
+    0x31: "enabled",
+    0x72: "removed",
+}
+
+
+def inspect_electron_fuses(binary_path: str) -> Dict[str, str]:
+    """Inspecciona el centinela binario de Electron Fuses v1 en streaming sin cargar todo en RAM."""
+    path = Path(binary_path)
+    if not path.is_file():
+        return {}
+    chunk_size = 262144
+    overlap_len = len(ELECTRON_FUSE_SENTINEL) + 32
+    tail = b""
+    with open(path, "rb") as f:
+        while chunk := f.read(chunk_size):
+            buf = tail + chunk
+            idx = buf.find(ELECTRON_FUSE_SENTINEL)
+            if idx != -1:
+                wire_start = idx + len(ELECTRON_FUSE_SENTINEL)
+                if wire_start + 2 > len(buf):
+                    buf += f.read(64)
+                if wire_start + 2 > len(buf):
+                    return {}
+                wire_version = buf[wire_start]
+                wire_len = buf[wire_start + 1]
+                fuses_raw = buf[wire_start + 2 : wire_start + 2 + wire_len]
+                fuses: Dict[str, str] = {}
+                for i, b_val in enumerate(fuses_raw):
+                    name = (
+                        ELECTRON_FUSE_V1_NAMES[i]
+                        if wire_version == 1 and i < len(ELECTRON_FUSE_V1_NAMES)
+                        else f"Fuse_{i}"
+                    )
+                    fuses[name] = ELECTRON_FUSE_STATES.get(b_val, "unknown")
+                return fuses
+            tail = buf[-overlap_len:] if len(buf) > overlap_len else buf
+    return {}
+
+
 def main():
     if len(sys.argv) < 2:
         print("Uso: python3 rea_unpacker.py <ruta_hacia_app.asar>")
