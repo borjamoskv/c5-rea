@@ -11,6 +11,7 @@ import sys
 import tempfile
 import json
 from pathlib import Path
+from unittest.mock import patch
 
 # Añadir directorio raíz al sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -191,8 +192,20 @@ class TestC5ReaSuite(unittest.TestCase):
         """El Existence-Gap Gate debe certificar PASS sobre código limpio de la suite."""
         suite_dir = Path(__file__).parent.parent
         res = run_existence_gap_audit(str(suite_dir))
-        self.assertEqual(res["verdict"], "PASS")
+        self.assertEqual(res["verdict"], "PASS", res.get("reports"))
         self.assertEqual(res["total_violations"], 0)
+
+    def test_existence_gap_recognizes_stdlib_without_module_name_table(self):
+        """Python 3.9 has no sys.stdlib_module_names; the install scan must still accept json."""
+        import existence_gate
+        self.assertIn("json", existence_gate._stdlib_modules_from_install())
+        with patch.object(existence_gate.sys, "stdlib_module_names", (), create=True):
+            self.assertIn("json", existence_gate._get_python_stdlib_modules())
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                target = Path(tmp_dir) / "clean.py"
+                target.write_text("import json\nvalue = json.dumps({'ok': True})\n")
+                res = run_existence_gap_audit(str(target))
+        self.assertEqual(res["verdict"], "PASS", res.get("reports"))
 
     def test_existence_gap_ts_comment_and_uri_precision(self):
         """El Existence-Gap Gate ignora comentarios, URIs y built-ins en TS/JS."""
