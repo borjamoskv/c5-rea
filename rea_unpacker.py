@@ -64,14 +64,13 @@ def scan_asar(asar_path: str) -> Tuple[List[Tuple[str, int, int]], int, Any]:
 # Channel names as they appear in Electron IPC APIs (literals or bound constants).
 _IPC_CHANNEL_RE = r"[a-zA-Z0-9_\-:.\/$]+"
 _IPC_METHODS_RE = r"send|sendSync|postMessage|invoke|on|once|handle|handleOnce|removeHandler|removeAllListeners"
-_IPC_CONST_PATTERN = re.compile(
-    r"(?:(?:const|let|var)\s+)?(?P<name>[A-Za-z_$][\w$]*)\s*=\s*['\"](?P<value>" + _IPC_CHANNEL_RE + r")['\"]"
-)
 _IPC_CALL_PATTERN = re.compile(
     r"(?P<target>ipcRenderer|ipcMain|webContents)\s*\.\s*"
     r"(?P<method>" + _IPC_METHODS_RE + r")"
-    r"\s*\(\s*(?:['\"](?P<channel>" + _IPC_CHANNEL_RE + r")['\"]|(?P<chan_var>[A-Za-z_$][\w$]*))"
+    r"\s*\(\s*(?:['\"](?P<channel>" + _IPC_CHANNEL_RE + r")['\"]|(?P<chan_var>[A-Za-z_$][\w$]*)(?=\s*[,)]))"
 )
+_CHANNEL_TOKEN = re.compile(r"[A-Za-z0-9]")
+_STRUCTURED_CHANNEL = re.compile(r"[:./$]")
 
 # Hyphenated Chromium/Electron renderer events that are not app IPC channels.
 ELECTRON_BUILTIN_EVENTS = frozenset({
@@ -86,26 +85,63 @@ ELECTRON_BUILTIN_EVENTS = frozenset({
     "leave-html-full-screen", "found-in-page", "media-started-playing",
     "media-paused", "enter-full-screen", "leave-full-screen",
     "scroll-touch-begin", "scroll-touch-end", "scroll-touch-edge",
+    "destroyed", "render-process-gone", "input-event", "did-create-window",
+    "did-attach", "preferred-size-changed", "cursor-changed", "context-menu",
 })
 
 
+_ASSIGN_TO_STRING = re.compile(r"""=\s*['"]""")
+_IDENT_BEFORE_EQ = re.compile(r"(?P<name>[A-Za-z_$][\w$]*)\s*$")
+_CHANNEL_VALUE = re.compile(r"^" + _IPC_CHANNEL_RE + r"$")
+
+
 def collect_ipc_string_constants(content: str) -> Dict[str, str]:
-    """Map identifiers to string literals (Ar = 'sand:encode-png')."""
+    """Map identifiers to string literals (Ar = 'sand:encode-png').
+
+    Search starts at `= '...'` / `="..."` so a long comment or minified
+    run cannot backtrack through an identifier quantifier.
+    """
     found: Dict[str, str] = {}
-    for m in _IPC_CONST_PATTERN.finditer(content):
-        found[m.group("name")] = m.group("value")
+    for m in _ASSIGN_TO_STRING.finditer(content):
+        prefix = content[max(0, m.start() - 256):m.start()]
+        ident = _IDENT_BEFORE_EQ.search(prefix)
+        if not ident:
+            continue
+        quote = content[m.end() - 1]
+        end = content.find(quote, m.end())
+        if end < 0:
+            continue
+        value = content[m.end():end]
+        if _CHANNEL_VALUE.fullmatch(value):
+            found[ident.group("name")] = value
     return found
 
 
+def _is_app_ipc_channel(channel: str, *, from_const: bool) -> bool:
+    """Drop Chromium events, comment crumbs, and minified identifier collisions."""
+    if not channel or channel in ELECTRON_BUILTIN_EVENTS:
+        return False
+    if not _CHANNEL_TOKEN.search(channel):
+        return False
+    # Bound constants in minified bundles reuse 1–2 letter names; only trust
+    # values that look like an IPC name (sand:foo, workspace/open, app.window.x).
+    if from_const and not _STRUCTURED_CHANNEL.search(channel):
+        return False
+    return True
+
+
 def extract_ipc_details(content: str, source_path: str = "") -> List[Dict[str, Any]]:
+
     """Harvest ipcMain/ipcRenderer/webContents calls, including channel constants."""
     constants = collect_ipc_string_constants(content)
     details: List[Dict[str, Any]] = []
     for m in _IPC_CALL_PATTERN.finditer(content):
         channel = m.group("channel")
+        from_const = False
         if not channel:
             channel = constants.get(m.group("chan_var") or "")
-        if not channel or channel in ELECTRON_BUILTIN_EVENTS:
+            from_const = bool(channel)
+        if not _is_app_ipc_channel(channel, from_const=from_const):
             continue
 
         target = m.group("target")
@@ -129,7 +165,10 @@ def extract_ipc_details(content: str, source_path: str = "") -> List[Dict[str, A
     return details
 
 
-def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
+DEFAULT_MAX_SCAN_BYTES = 8 * 1024 * 1024  # 8 MiB; covers large main/renderer bundles
+
+
+def audit_electron_asar(asar_path: str, max_scan_bytes: int = DEFAULT_MAX_SCAN_BYTES) -> Dict[str, Any]:
     """Audita quirúrgicamente canales IPC, endpoints, package.json y secretos."""
     files, header_offset, f = scan_asar(asar_path)
     
@@ -156,7 +195,7 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
                     pass
                 break
 
-        # 2. Escanear canales IPC, contextBridge y endpoints en módulos JavaScript (< 500 KB)
+        # 2. Escanear canales IPC, contextBridge y endpoints en módulos JavaScript (cap configurable)
         bridge_pattern = re.compile(
             r'contextBridge\s*\.\s*exposeInMainWorld\s*\(\s*[\'"](?P<api_key>[a-zA-Z0-9_\-\$]+)[\'"]'
         )
@@ -168,7 +207,7 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
         found_urls = set()
 
         for path, size, offset in files:
-            if path.endswith(('.js', '.mjs', '.cjs', '.json')) and size < 500000:
+            if path.endswith(('.js', '.mjs', '.cjs', '.json')) and size <= max_scan_bytes:
                 f.seek(header_offset + int(offset))
                 content = f.read(size).decode('utf-8', errors='ignore')
 

@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from rea_unpacker import audit_electron_asar, extract_ipc_details, scan_asar
+from rea_unpacker import DEFAULT_MAX_SCAN_BYTES, audit_electron_asar, extract_ipc_details, scan_asar
 
 
 def _align4(n: int) -> int:
@@ -121,6 +121,24 @@ class AsarOffsetTests(unittest.TestCase):
             )
 
 
+class ScanSizeCapTests(unittest.TestCase):
+    def test_default_cap_includes_large_main_bundles(self):
+        """Files just over the old 500 KiB cap must be scanned by default."""
+        padding = b"/* " + b"x" * 520_000 + b" */\n"
+        body = padding + b"ipcRenderer.invoke('big:main-channel');\n"
+        self.assertGreater(len(body), 500_000)
+        self.assertLess(len(body), DEFAULT_MAX_SCAN_BYTES)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            asar_file = Path(tmp_dir) / "app.asar"
+            write_asar(asar_file, {"main-app.cjs": body})
+            audit = audit_electron_asar(str(asar_file))
+            self.assertIn("big:main-channel", audit["ipc_channels"])
+
+            skipped = audit_electron_asar(str(asar_file), max_scan_bytes=500_000)
+            self.assertNotIn("big:main-channel", skipped["ipc_channels"])
+
+
 class IpcConstantResolutionTests(unittest.TestCase):
     def test_extract_ipc_follows_assigned_string_constants(self):
         """Minified bindings like Ar='sand:encode-png' must resolve at ipcRenderer.on(Ar, ...)."""
@@ -153,6 +171,20 @@ class IpcConstantResolutionTests(unittest.TestCase):
         self.assertEqual(channels, expected)
         self.assertNotIn("dom-ready", channels)
         self.assertNotIn("unknownChannel", channels)
+
+    def test_extract_ipc_ignores_method_calls_and_plain_minified_consts(self):
+        """Do not treat t.createKey(...) or reused minified names as channels."""
+        sample = (
+            "var t='info',e='//',j='away';\n"
+            "on.ipcMain.on(t.createKey('start'), handler);\n"
+            "n.webContents.send(e, t);\n"
+            "$.webContents.send(j, O);\n"
+            "a.webContents.on('destroyed', s);\n"
+            "a.webContents.on('render-process-gone', s);\n"
+            "ipcMain.on('info', handler);\n"
+        )
+        channels = {item["channel"] for item in extract_ipc_details(sample)}
+        self.assertEqual(channels, {"info"})
 
     def test_asar_audit_resolves_ipc_channel_constants(self):
         preload = (

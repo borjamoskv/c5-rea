@@ -35,11 +35,13 @@ def main():
     p_orch.add_argument("--max", type=int, default=8, help="Número máximo de funciones CFG a descompilar (default: 8)")
     p_orch.add_argument("--out", default=None, help="Directorio donde guardar el dossier JSON")
     p_orch.add_argument("--json", action="store_true", help="Emitir el EvidenceEnvelopeV2 completo en JSON a stdout")
+    p_orch.add_argument("--max-scan-bytes", type=int, default=None, help="Tope de tamaño por fichero al escanear JS en un ASAR (default: 8 MiB)")
 
     # Subcomando unpack
     p_unpack = subparsers.add_parser("unpack", help="Auditoría forense in-memory de ASAR Electron")
     p_unpack.add_argument("asar", help="Ruta al archivo app.asar")
     p_unpack.add_argument("--out", default=None, help="Directorio donde guardar el dossier JSON de evidencia")
+    p_unpack.add_argument("--max-scan-bytes", type=int, default=None, help="Tope de tamaño por fichero al escanear JS (default: 8 MiB)")
 
     # Subcomando decompile
     p_decompile = subparsers.add_parser("decompile", help="Descompilación estática CFG sobre Mach-O")
@@ -109,7 +111,8 @@ def main():
         print(f"[+] Triage completado: {report.architecture}, {report.entropy_shannon} bits/byte, {report.file_size_bytes} bytes")
     elif args.command == "orchestrate":
         out_dir = Path(args.out).resolve() if args.out else None
-        envelope, out_file = orchestrate_target(args.target, max_functions=args.max, out_dir=out_dir)
+        scan_kw = {"max_scan_bytes": args.max_scan_bytes} if args.max_scan_bytes is not None else {}
+        envelope, out_file = orchestrate_target(args.target, max_functions=args.max, out_dir=out_dir, **scan_kw)
         if args.json:
             print(envelope.model_dump_json(indent=2))
         else:
@@ -120,7 +123,8 @@ def main():
             print(f"  - Dossier v2:   {out_file}")
     elif args.command == "unpack":
         out_dir = Path(args.out).resolve() if args.out else None
-        envelope, out_file = orchestrate_target(args.asar, max_functions=0, out_dir=out_dir)
+        scan_kw = {"max_scan_bytes": args.max_scan_bytes} if args.max_scan_bytes is not None else {}
+        envelope, out_file = orchestrate_target(args.asar, max_functions=0, out_dir=out_dir, **scan_kw)
         print(f"[+] ASAR indexado: {len(envelope.ipc_channels)} canales IPC")
         print(f"  - Dossier v2:   {out_file}")
     elif args.command == "decompile":
