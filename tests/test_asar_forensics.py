@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from rea_unpacker import DEFAULT_MAX_SCAN_BYTES, audit_electron_asar, extract_ipc_details, scan_asar
+from rea_unpacker import DEFAULT_MAX_SCAN_BYTES, audit_electron_asar, extract_ipc_details, extract_remote_urls, scan_asar
 
 
 def _align4(n: int) -> int:
@@ -119,6 +119,41 @@ class AsarOffsetTests(unittest.TestCase):
                 raw[data_start + len(package_bytes):data_start + len(package_bytes) + len(index_js)],
                 index_js,
             )
+
+
+class UrlExtractionTests(unittest.TestCase):
+    def test_extract_remote_urls_filters_schema_noise_and_js_crumbs(self):
+        sample = (
+            "const ooxml = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument';\n"
+            "const oasis = 'http://docs.oasis-open.org/ns/office/1.2/meta/pkg#';\n"
+            "const w3 = 'https://www.w3.org/1999/xhtml';\n"
+            "const example = 'http://example.com/placeholder';\n"
+            "const broken = 'https://1password.com/blog/sdks';function next() {}\n"
+            "const api = 'https://api2.cursor.sh/aiserver.v1.AuthService/GetMe';\n"
+            "const xai = 'https://api.x.ai/v1/chat';\n"
+            "const grok = 'https://grok.com/api';\n"
+        )
+        urls = extract_remote_urls(sample)
+        self.assertIn("https://api2.cursor.sh/aiserver.v1.AuthService/GetMe", urls)
+        self.assertIn("https://api.x.ai/v1/chat", urls)
+        self.assertIn("https://grok.com/api", urls)
+        self.assertIn("https://1password.com/blog/sdks", urls)
+        self.assertFalse(any("function" in u for u in urls))
+        self.assertFalse(any("schemas.openxmlformats.org" in u for u in urls))
+        self.assertFalse(any("oasis-open.org" in u for u in urls))
+        self.assertFalse(any("w3.org" in u for u in urls))
+        self.assertFalse(any("example.com" in u for u in urls))
+
+    def test_asar_audit_does_not_cap_remote_endpoints_at_20(self):
+        lines = [f"fetch('https://host{i}.cursor.sh/v1');" for i in range(25)]
+        body = ("\n".join(lines) + "\n").encode("utf-8")
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            asar_file = Path(tmp_dir) / "app.asar"
+            write_asar(asar_file, {"bundle.js": body})
+            audit = audit_electron_asar(str(asar_file))
+            self.assertEqual(len(audit["remote_endpoints"]), 25)
+            self.assertIn("https://host0.cursor.sh/v1", audit["remote_endpoints"])
+            self.assertIn("https://host24.cursor.sh/v1", audit["remote_endpoints"])
 
 
 class ScanSizeCapTests(unittest.TestCase):

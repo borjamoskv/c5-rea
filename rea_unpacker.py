@@ -165,6 +165,63 @@ def extract_ipc_details(content: str, source_path: str = "") -> List[Dict[str, A
     return details
 
 
+
+_URL_PATTERN = re.compile(
+    r"https?://"
+    r"[a-zA-Z0-9](?:[a-zA-Z0-9\-]*[a-zA-Z0-9])?"
+    r"(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9\-]*[a-zA-Z0-9])?)+"
+    r"(?::\d{2,5})?"
+    r"(?:/[a-zA-Z0-9_\-./~%?&=+#@]*)?"
+)
+_URL_NOISE_HOSTS = (
+    "w3.org",
+    "schema.org",
+    "schemas.microsoft.com",
+    "schemas.openxmlformats.org",
+    "sheetjs.openxmlformats.org",
+    "oasis-open.org",
+    "openoffice.org",
+    "purl.org",
+    "purl.oclc.org",
+    "xmlsoap.org",
+    "json-schema.org",
+    "whatwg.org",
+    "xfa.org",
+    "ns.adobe.com",
+    "example.com",
+    "example.org",
+    "example.net",
+    "localhost",
+)
+
+
+def _url_host(url: str) -> str:
+    rest = url.split("://", 1)[-1]
+    return rest.split("/", 1)[0].split(":", 1)[0].lower()
+
+
+def _url_is_noise(url: str) -> bool:
+    host = _url_host(url)
+    if host in {"localhost", "127.0.0.1", "0.0.0.0", "::1"}:
+        return True
+    if host.endswith(".invalid"):
+        return True
+    return any(host == suffix or host.endswith("." + suffix) for suffix in _URL_NOISE_HOSTS)
+
+
+def extract_remote_urls(content: str) -> List[str]:
+    """Harvest http(s) URLs, stopping at JS/source delimiters and dropping schema namespaces."""
+    found: List[str] = []
+    seen = set()
+    for m in _URL_PATTERN.finditer(content):
+        url = m.group(0).rstrip(").,;:]>\"'")
+        if _url_is_noise(url) or url in seen:
+            continue
+        seen.add(url)
+        found.append(url)
+    return found
+
+
 DEFAULT_MAX_SCAN_BYTES = 8 * 1024 * 1024  # 8 MiB; covers large main/renderer bundles
 
 
@@ -199,7 +256,6 @@ def audit_electron_asar(asar_path: str, max_scan_bytes: int = DEFAULT_MAX_SCAN_B
         bridge_pattern = re.compile(
             r'contextBridge\s*\.\s*exposeInMainWorld\s*\(\s*[\'"](?P<api_key>[a-zA-Z0-9_\-\$]+)[\'"]'
         )
-        url_pattern = re.compile(r'https?://[a-zA-Z0-9_\-\.]+\.[a-zA-Z]{2,}(?:/[^\s\'"<]*)?')
 
         found_ipc = set()
         ipc_details = []
@@ -220,16 +276,12 @@ def audit_electron_asar(asar_path: str, max_scan_bytes: int = DEFAULT_MAX_SCAN_B
                 for bm in bridge_pattern.finditer(content):
                     found_bridges.add(bm.group("api_key"))
 
-                # URLs (filtrando localhost y namespaces de schema)
-                urls = url_pattern.findall(content)
-                for u in urls:
-                    if not any(ign in u for ign in ("w3.org", "schema.org", "localhost", "127.0.0.1")):
-                        found_urls.add(u)
+                found_urls.update(extract_remote_urls(content))
 
         result["ipc_channels"] = sorted(list(found_ipc))
         result["ipc_details"] = ipc_details
         result["preload_bridges"] = sorted(list(found_bridges))
-        result["remote_endpoints"] = sorted(list(found_urls))[:20]
+        result["remote_endpoints"] = sorted(found_urls)
 
     finally:
         f.close()
