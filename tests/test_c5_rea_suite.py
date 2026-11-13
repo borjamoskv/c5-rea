@@ -117,19 +117,14 @@ class TestC5ReaSuite(unittest.TestCase):
 
     def test_asar_ipc_comprehensive_regex(self):
         """Verificar que el extractor forense IPC detecta canales complejos (. / $) y métodos avanzados."""
-        import re
-        ipc_pattern = re.compile(
-            r'(?P<target>ipcRenderer|ipcMain|webContents)\s*\.\s*'
-            r'(?P<method>send|sendSync|postMessage|invoke|on|once|handle|handleOnce|removeHandler|removeAllListeners)'
-            r'\s*\(\s*[\'"](?P<channel>[a-zA-Z0-9_\-:\.\/\$]+)[\'"]'
-        )
+        from rea_unpacker import extract_ipc_details
         sample_code = """
         ipcRenderer.invoke('app.window.close', { force: true });
         ipcRenderer.sendSync('workspace/open', id);
         ipcMain.handleOnce('audio:start-buffer', async () => {});
         ipcMain.on('user$profile', (e) => {});
         """
-        matches = {m.group("channel"): (m.group("target"), m.group("method")) for m in ipc_pattern.finditer(sample_code)}
+        matches = {item["channel"]: (item["target"], item["method"]) for item in extract_ipc_details(sample_code)}
         self.assertIn('app.window.close', matches)
         self.assertIn('workspace/open', matches)
         self.assertIn('audio:start-buffer', matches)

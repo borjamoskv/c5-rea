@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from rea_unpacker import audit_electron_asar, scan_asar
+from rea_unpacker import audit_electron_asar, extract_ipc_details, scan_asar
 
 
 def _align4(n: int) -> int:
@@ -119,6 +119,53 @@ class AsarOffsetTests(unittest.TestCase):
                 raw[data_start + len(package_bytes):data_start + len(package_bytes) + len(index_js)],
                 index_js,
             )
+
+
+class IpcConstantResolutionTests(unittest.TestCase):
+    def test_extract_ipc_follows_assigned_string_constants(self):
+        """Minified bindings like Ar='sand:encode-png' must resolve at ipcRenderer.on(Ar, ...)."""
+        sample = (
+            "var Ar='sand:encode-png',hr='sand:main-edge-served',"
+            "Tr='sand:network-online',br='sand:renderer-alive',"
+            "Or='sand:renderer-boot-gate-landed',Nr='sand:renderer-boot-gate-opened';\n"
+            "ipcRenderer.sendSync(\"sand:boot-snapshot-sync\");\n"
+            "ipcRenderer.on(\"sand:coordinator-port\", () => {});\n"
+            "ipcRenderer.on(Ar, () => {});\n"
+            "ipcRenderer.once(hr, cb);\n"
+            "ipcRenderer.send(Tr);\n"
+            "ipcRenderer.send(br);\n"
+            "ipcRenderer.send(Or);\n"
+            "ipcRenderer.send(Nr);\n"
+            "ipcRenderer.on(unknownChannel, () => {});\n"
+            "webContents.on('dom-ready', () => {});\n"
+        )
+        channels = {item["channel"] for item in extract_ipc_details(sample, "preload.cjs")}
+        expected = {
+            "sand:encode-png",
+            "sand:main-edge-served",
+            "sand:network-online",
+            "sand:renderer-alive",
+            "sand:renderer-boot-gate-landed",
+            "sand:renderer-boot-gate-opened",
+            "sand:boot-snapshot-sync",
+            "sand:coordinator-port",
+        }
+        self.assertEqual(channels, expected)
+        self.assertNotIn("dom-ready", channels)
+        self.assertNotIn("unknownChannel", channels)
+
+    def test_asar_audit_resolves_ipc_channel_constants(self):
+        preload = (
+            b"var Ar='sand:encode-png';\n"
+            b"ipcRenderer.on(Ar, () => {});\n"
+            b"ipcMain.handle('workspace/open', async () => {});\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            asar_file = Path(tmp_dir) / "app.asar"
+            write_asar(asar_file, {"preload.cjs": preload})
+            audit = audit_electron_asar(str(asar_file))
+            self.assertIn("sand:encode-png", audit["ipc_channels"])
+            self.assertIn("workspace/open", audit["ipc_channels"])
 
 
 class UnpackEnvelopeTests(unittest.TestCase):

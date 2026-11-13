@@ -60,6 +60,75 @@ def scan_asar(asar_path: str) -> Tuple[List[Tuple[str, int, int]], int, Any]:
         raise
 
 
+
+# Channel names as they appear in Electron IPC APIs (literals or bound constants).
+_IPC_CHANNEL_RE = r"[a-zA-Z0-9_\-:.\/$]+"
+_IPC_METHODS_RE = r"send|sendSync|postMessage|invoke|on|once|handle|handleOnce|removeHandler|removeAllListeners"
+_IPC_CONST_PATTERN = re.compile(
+    r"(?:(?:const|let|var)\s+)?(?P<name>[A-Za-z_$][\w$]*)\s*=\s*['\"](?P<value>" + _IPC_CHANNEL_RE + r")['\"]"
+)
+_IPC_CALL_PATTERN = re.compile(
+    r"(?P<target>ipcRenderer|ipcMain|webContents)\s*\.\s*"
+    r"(?P<method>" + _IPC_METHODS_RE + r")"
+    r"\s*\(\s*(?:['\"](?P<channel>" + _IPC_CHANNEL_RE + r")['\"]|(?P<chan_var>[A-Za-z_$][\w$]*))"
+)
+
+# Hyphenated Chromium/Electron renderer events that are not app IPC channels.
+ELECTRON_BUILTIN_EVENTS = frozenset({
+    "did-navigate", "did-navigate-in-page", "did-finish-load", "did-fail-load",
+    "did-fail-provisional-load", "did-frame-finish-load", "did-start-loading",
+    "did-stop-loading", "did-start-navigation", "did-redirect-navigation",
+    "did-frame-navigate", "did-change-theme-color", "did-attach-webview",
+    "dom-ready", "page-title-updated", "page-favicon-updated",
+    "will-navigate", "will-redirect", "will-prevent-unload",
+    "preload-error", "console-message", "unresponsive", "responsive",
+    "plugin-crashed", "ready-to-show", "enter-html-full-screen",
+    "leave-html-full-screen", "found-in-page", "media-started-playing",
+    "media-paused", "enter-full-screen", "leave-full-screen",
+    "scroll-touch-begin", "scroll-touch-end", "scroll-touch-edge",
+})
+
+
+def collect_ipc_string_constants(content: str) -> Dict[str, str]:
+    """Map identifiers to string literals (Ar = 'sand:encode-png')."""
+    found: Dict[str, str] = {}
+    for m in _IPC_CONST_PATTERN.finditer(content):
+        found[m.group("name")] = m.group("value")
+    return found
+
+
+def extract_ipc_details(content: str, source_path: str = "") -> List[Dict[str, Any]]:
+    """Harvest ipcMain/ipcRenderer/webContents calls, including channel constants."""
+    constants = collect_ipc_string_constants(content)
+    details: List[Dict[str, Any]] = []
+    for m in _IPC_CALL_PATTERN.finditer(content):
+        channel = m.group("channel")
+        if not channel:
+            channel = constants.get(m.group("chan_var") or "")
+        if not channel or channel in ELECTRON_BUILTIN_EVENTS:
+            continue
+
+        target = m.group("target")
+        method = m.group("method")
+        if target == "ipcRenderer" and method in ("send", "sendSync", "invoke", "postMessage"):
+            direction = "r2m"
+        elif target in ("ipcMain", "webContents") and method in ("send", "postMessage"):
+            direction = "m2r"
+        elif target == "ipcMain" and method in ("handle", "handleOnce", "on", "once"):
+            direction = "main_handler"
+        else:
+            direction = "renderer_listener"
+
+        details.append({
+            "channel": channel,
+            "direction": direction,
+            "target": target,
+            "method": method,
+            "file": source_path,
+        })
+    return details
+
+
 def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
     """Audita quirúrgicamente canales IPC, endpoints, package.json y secretos."""
     files, header_offset, f = scan_asar(asar_path)
@@ -88,11 +157,6 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
                 break
 
         # 2. Escanear canales IPC, contextBridge y endpoints en módulos JavaScript (< 500 KB)
-        ipc_pattern = re.compile(
-            r'(?P<target>ipcRenderer|ipcMain|webContents)\s*\.\s*'
-            r'(?P<method>send|sendSync|postMessage|invoke|on|once|handle|handleOnce|removeHandler|removeAllListeners)'
-            r'\s*\(\s*[\'"](?P<channel>[a-zA-Z0-9_\-:\.\/\$]+)[\'"]'
-        )
         bridge_pattern = re.compile(
             r'contextBridge\s*\.\s*exposeInMainWorld\s*\(\s*[\'"](?P<api_key>[a-zA-Z0-9_\-\$]+)[\'"]'
         )
@@ -108,30 +172,10 @@ def audit_electron_asar(asar_path: str) -> Dict[str, Any]:
                 f.seek(header_offset + int(offset))
                 content = f.read(size).decode('utf-8', errors='ignore')
 
-                # IPC
-                for m in ipc_pattern.finditer(content):
-                    target = m.group("target")
-                    method = m.group("method")
-                    ch = m.group("channel")
-                    found_ipc.add(ch)
-
-                    # Determinar dirección operacional
-                    if target == "ipcRenderer" and method in ("send", "sendSync", "invoke", "postMessage"):
-                        direction = "r2m"
-                    elif target in ("ipcMain", "webContents") and method in ("send", "postMessage"):
-                        direction = "m2r"
-                    elif target == "ipcMain" and method in ("handle", "handleOnce", "on", "once"):
-                        direction = "main_handler"
-                    else:
-                        direction = "renderer_listener"
-
-                    ipc_details.append({
-                        "channel": ch,
-                        "direction": direction,
-                        "target": target,
-                        "method": method,
-                        "file": path
-                    })
+                # IPC (literals and identifiers bound to string constants)
+                for item in extract_ipc_details(content, path):
+                    found_ipc.add(item["channel"])
+                    ipc_details.append(item)
 
                 # Preload contextBridge APIs
                 for bm in bridge_pattern.finditer(content):
