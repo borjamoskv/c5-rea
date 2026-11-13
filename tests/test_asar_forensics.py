@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Regression tests for in-memory Electron ASAR forensics."""
 
+import io
 import json
 import struct
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
@@ -117,6 +119,39 @@ class AsarOffsetTests(unittest.TestCase):
                 raw[data_start + len(package_bytes):data_start + len(package_bytes) + len(index_js)],
                 index_js,
             )
+
+
+class UnpackEnvelopeTests(unittest.TestCase):
+    def test_unpack_cli_writes_evidence_envelope(self):
+        """unpack must seal an EvidenceEnvelopeV2, not only print a summary."""
+        package_bytes = b'{"name":"seal-fixture","version":"0.0.1"}'
+        preload = (
+            b"const { contextBridge, ipcRenderer } = require('electron');\n"
+            b"contextBridge.exposeInMainWorld('api', {\n"
+            b"  ping: () => ipcRenderer.invoke('seal:ping'),\n"
+            b"});\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp = Path(tmp_dir)
+            asar_file = tmp / "app.asar"
+            out_dir = tmp / "evidence"
+            write_asar(asar_file, {"package.json": package_bytes, "preload.cjs": preload})
+
+            import c5_rea_cli
+            argv = ["c5-rea", "unpack", str(asar_file), "--out", str(out_dir)]
+            buf = io.StringIO()
+            with mock.patch.object(sys, "argv", argv), mock.patch("sys.stdout", buf):
+                c5_rea_cli.main()
+
+            envelopes = list(out_dir.glob("evidence_*.json"))
+            self.assertEqual(len(envelopes), 1, buf.getvalue())
+            data = json.loads(envelopes[0].read_text(encoding="utf-8"))
+            self.assertIn("target", data)
+            self.assertIn("ipc_channels", data)
+            channels = [item["channel"] for item in data["ipc_channels"]]
+            self.assertIn("seal:ping", channels)
+            self.assertIn("Dossier v2", buf.getvalue())
+            self.assertIn(str(envelopes[0]), buf.getvalue())
 
 
 if __name__ == "__main__":

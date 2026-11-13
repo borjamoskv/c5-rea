@@ -10,7 +10,6 @@ import argparse
 from pathlib import Path
 
 from rea_orchestrator import run_triage, inspect_mach_o, orchestrate_target
-from rea_unpacker import audit_electron_asar
 from rea_decompiler import extract_function_cfg
 from rea_recreator import run_recreation
 from rea_auditor import audit_reconstruction
@@ -40,6 +39,7 @@ def main():
     # Subcomando unpack
     p_unpack = subparsers.add_parser("unpack", help="Auditoría forense in-memory de ASAR Electron")
     p_unpack.add_argument("asar", help="Ruta al archivo app.asar")
+    p_unpack.add_argument("--out", default=None, help="Directorio donde guardar el dossier JSON de evidencia")
 
     # Subcomando decompile
     p_decompile = subparsers.add_parser("decompile", help="Descompilación estática CFG sobre Mach-O")
@@ -119,8 +119,10 @@ def main():
             print(f"  - Funciones CFG: {len(envelope.native_functions)} descompiladas")
             print(f"  - Dossier v2:   {out_file}")
     elif args.command == "unpack":
-        audit = audit_electron_asar(args.asar)
-        print(f"[+] ASAR indexado: {audit['total_files']} archivos, {len(audit['ipc_channels'])} canales IPC")
+        out_dir = Path(args.out).resolve() if args.out else None
+        envelope, out_file = orchestrate_target(args.asar, max_functions=0, out_dir=out_dir)
+        print(f"[+] ASAR indexado: {len(envelope.ipc_channels)} canales IPC")
+        print(f"  - Dossier v2:   {out_file}")
     elif args.command == "decompile":
         funcs = extract_function_cfg(args.binary, max_functions=args.max)
         print(f"[+] Descompilación completada: {len(funcs)} funciones con CFG extraídas")
