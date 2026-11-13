@@ -35,10 +35,37 @@ TRUNCATION_MARKERS = [
 ]
 
 
+def _stdlib_modules_from_install() -> Set[str]:
+    """Top-level stdlib names for interpreters without sys.stdlib_module_names (3.9)."""
+    import sysconfig
+    names: Set[str] = set()
+    stdlib_dir = Path(sysconfig.get_path("stdlib"))
+    if not stdlib_dir.is_dir():
+        return names
+    for path in stdlib_dir.iterdir():
+        if path.name in ("site-packages", "lib-dynload"):
+            continue
+        if path.suffix == ".py":
+            names.add(path.stem)
+        elif path.is_dir() and (path / "__init__.py").is_file():
+            names.add(path.name)
+    dynload = stdlib_dir / "lib-dynload"
+    if dynload.is_dir():
+        for path in dynload.iterdir():
+            stem = path.name.split(".", 1)[0]
+            if stem:
+                names.add(stem)
+    return names
+
+
 def _get_python_stdlib_modules() -> Set[str]:
-    std = set(getattr(sys, "stdlib_module_names", set()))
-    std.update(sys.builtin_module_names)
-    return std
+    named = set(getattr(sys, "stdlib_module_names", ()))
+    if named:
+        named.update(sys.builtin_module_names)
+        return named
+    discovered = set(sys.builtin_module_names)
+    discovered.update(_stdlib_modules_from_install())
+    return discovered
 
 
 def _discover_local_modules(root_dir: Path) -> Set[str]:

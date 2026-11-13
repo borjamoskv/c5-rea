@@ -6,10 +6,12 @@ Valida el 100% de los componentes en silicio sin dependencias externas.
 
 import unittest
 import os
+import shutil
 import sys
 import tempfile
 import json
 from pathlib import Path
+from unittest.mock import patch
 
 # Añadir directorio raíz al sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -190,8 +192,20 @@ class TestC5ReaSuite(unittest.TestCase):
         """El Existence-Gap Gate debe certificar PASS sobre código limpio de la suite."""
         suite_dir = Path(__file__).parent.parent
         res = run_existence_gap_audit(str(suite_dir))
-        self.assertEqual(res["verdict"], "PASS")
+        self.assertEqual(res["verdict"], "PASS", res.get("reports"))
         self.assertEqual(res["total_violations"], 0)
+
+    def test_existence_gap_recognizes_stdlib_without_module_name_table(self):
+        """Python 3.9 has no sys.stdlib_module_names; the install scan must still accept json."""
+        import existence_gate
+        self.assertIn("json", existence_gate._stdlib_modules_from_install())
+        with patch.object(existence_gate.sys, "stdlib_module_names", (), create=True):
+            self.assertIn("json", existence_gate._get_python_stdlib_modules())
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                target = Path(tmp_dir) / "clean.py"
+                target.write_text("import json\nvalue = json.dumps({'ok': True})\n")
+                res = run_existence_gap_audit(str(target))
+        self.assertEqual(res["verdict"], "PASS", res.get("reports"))
 
     def test_existence_gap_ts_comment_and_uri_precision(self):
         """El Existence-Gap Gate ignora comentarios, URIs y built-ins en TS/JS."""
@@ -240,11 +254,15 @@ class TestC5ReaSuite(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir)
             # Invocación directa del orquestador
+            resolved = str(Path("/bin/ls").resolve())
             envelope, out_file = orchestrate_target("/bin/ls", max_functions=2, out_dir=out_dir)
             self.assertTrue(out_file.exists())
-            self.assertEqual(envelope.target.target_path, "/bin/ls")
+            self.assertEqual(envelope.target.target_path, resolved)
             self.assertGreater(envelope.target.file_size_bytes, 0)
-            self.assertGreaterEqual(len(envelope.native_functions), 1)
+            if shutil.which("otool"):
+                self.assertGreaterEqual(len(envelope.native_functions), 1)
+            else:
+                self.assertEqual(envelope.native_functions, [])
 
             # Invocación a través del despachador de herramientas MCP
             mcp_res = handle_tools_call(42, {
@@ -258,7 +276,7 @@ class TestC5ReaSuite(unittest.TestCase):
             self.assertFalse(mcp_res["result"]["isError"])
             content_json = json.loads(mcp_res["result"]["content"][0]["text"])
             self.assertEqual(content_json["status"], "ORCHESTRATED")
-            self.assertEqual(content_json["target"], "/bin/ls")
+            self.assertEqual(content_json["target"], resolved)
 
     def test_asar_preload_bridge_and_orchestrator_strings(self):
         """Verificar extracción de contextBridge, módulos .mjs/.cjs y poblado de extracted_strings."""
