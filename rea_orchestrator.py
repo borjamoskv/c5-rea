@@ -21,7 +21,7 @@ from evidence_schema import (
     FunctionEvidence,
     IPCEvidence,
 )
-from rea_unpacker import audit_electron_asar
+from rea_unpacker import DEFAULT_MAX_SCAN_BYTES, audit_electron_asar
 from rea_decompiler import extract_function_cfg
 
 
@@ -135,7 +135,8 @@ def run_triage(target_path: str) -> BinaryTriageReport:
 def orchestrate_target(
     target_path: str,
     max_functions: int = 8,
-    out_dir: Optional[Path] = None
+    out_dir: Optional[Path] = None,
+    max_scan_bytes: int = DEFAULT_MAX_SCAN_BYTES,
 ) -> Tuple[EvidenceEnvelopeV2, Path]:
     """Ejecuta el pipeline forense completo y genera el sobre de evidencia consolidado."""
     triage = run_triage(target_path)
@@ -152,7 +153,7 @@ def orchestrate_target(
             asar_candidate = candidate
 
     if asar_candidate:
-        asar_audit = audit_electron_asar(str(asar_candidate))
+        asar_audit = audit_electron_asar(str(asar_candidate), max_scan_bytes=max_scan_bytes)
         details_by_channel: Dict[str, List[Dict[str, Any]]] = {}
         for item in asar_audit.get("ipc_details", []):
             ch = item.get("channel")

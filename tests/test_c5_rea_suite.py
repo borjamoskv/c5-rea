@@ -117,19 +117,14 @@ class TestC5ReaSuite(unittest.TestCase):
 
     def test_asar_ipc_comprehensive_regex(self):
         """Verificar que el extractor forense IPC detecta canales complejos (. / $) y métodos avanzados."""
-        import re
-        ipc_pattern = re.compile(
-            r'(?P<target>ipcRenderer|ipcMain|webContents)\s*\.\s*'
-            r'(?P<method>send|sendSync|postMessage|invoke|on|once|handle|handleOnce|removeHandler|removeAllListeners)'
-            r'\s*\(\s*[\'"](?P<channel>[a-zA-Z0-9_\-:\.\/\$]+)[\'"]'
-        )
+        from rea_unpacker import extract_ipc_details
         sample_code = """
         ipcRenderer.invoke('app.window.close', { force: true });
         ipcRenderer.sendSync('workspace/open', id);
         ipcMain.handleOnce('audio:start-buffer', async () => {});
         ipcMain.on('user$profile', (e) => {});
         """
-        matches = {m.group("channel"): (m.group("target"), m.group("method")) for m in ipc_pattern.finditer(sample_code)}
+        matches = {item["channel"]: (item["target"], item["method"]) for item in extract_ipc_details(sample_code)}
         self.assertIn('app.window.close', matches)
         self.assertIn('workspace/open', matches)
         self.assertIn('audio:start-buffer', matches)
@@ -192,6 +187,36 @@ class TestC5ReaSuite(unittest.TestCase):
         res = run_existence_gap_audit(str(suite_dir))
         self.assertEqual(res["verdict"], "PASS")
         self.assertEqual(res["total_violations"], 0)
+
+    def test_existence_gap_allows_protocol_ellipsis_but_flags_hollow_defs(self):
+        """Ellipsis in a typing.Protocol method is a signature, not a hollow stub."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            proto = Path(tmp_dir) / "ipc_contracts.py"
+            proto.write_text(
+                "from typing import Any, Dict, Protocol, runtime_checkable\n"
+                "\n"
+                "@runtime_checkable\n"
+                "class IpcDispatcher(Protocol):\n"
+                "    async def dispatch(self, channel: str, payload: Dict[str, Any]) -> Dict[str, Any]:\n"
+                "        ...\n"
+                "\n"
+                "class Generic(Protocol):\n"
+                "    def handle(self) -> None:\n"
+                "        ...\n"
+            )
+            res = run_existence_gap_audit(str(proto))
+            self.assertEqual(res["verdict"], "PASS", res)
+            self.assertEqual(res["total_violations"], 0)
+
+            hollow = Path(tmp_dir) / "hollow.py"
+            hollow.write_text(
+                "def missing_implementation(channel: str) -> None:\n"
+                "    ...\n"
+            )
+            res = run_existence_gap_audit(str(hollow))
+            self.assertEqual(res["verdict"], "FAIL")
+            types = {v["type"] for report in res["reports"] for v in report["violations"]}
+            self.assertIn("HOLLOW_FUNCTION_STUB", types)
 
     def test_existence_gap_ts_comment_and_uri_precision(self):
         """El Existence-Gap Gate ignora comentarios, URIs y built-ins en TS/JS."""

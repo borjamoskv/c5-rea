@@ -95,7 +95,29 @@ def _discover_declared_dependencies(root_dir: Path) -> Set[str]:
     return declared
 
 
+def _is_protocol_base(base: ast.expr) -> bool:
+    """True for Protocol, typing.Protocol, or Protocol[T]."""
+    if isinstance(base, ast.Subscript):
+        base = base.value
+    if isinstance(base, ast.Name) and base.id == "Protocol":
+        return True
+    if isinstance(base, ast.Attribute) and base.attr == "Protocol":
+        return True
+    return False
+
+
+def _protocol_method_ids(tree: ast.AST) -> Set[int]:
+    ids: Set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and any(_is_protocol_base(base) for base in node.bases):
+            for item in node.body:
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    ids.add(id(item))
+    return ids
+
+
 def audit_python_file(file_path: Path, root_dir: Path) -> Dict[str, Any]:
+
     content = file_path.read_text(encoding="utf-8", errors="replace")
     violations: List[Dict[str, Any]] = []
 
@@ -114,6 +136,7 @@ def audit_python_file(file_path: Path, root_dir: Path) -> Dict[str, Any]:
     declared = _discover_declared_dependencies(root_dir)
 
     # 2. Check imports & empty stubs in AST
+    protocol_methods = _protocol_method_ids(tree)
     for node in ast.walk(tree):
         if isinstance(node, (ast.Import, ast.ImportFrom)):
             mod_name = None
@@ -158,7 +181,7 @@ def audit_python_file(file_path: Path, root_dir: Path) -> Dict[str, Any]:
                         isinstance(d, ast.Name) and "abstract" in d.id.lower()
                         for d in node.decorator_list
                     )
-                    if not has_decorator and not node.name.startswith("_"):
+                    if not has_decorator and not node.name.startswith("_") and id(node) not in protocol_methods:
                         violations.append({
                             "type": "HOLLOW_FUNCTION_STUB",
                             "line": node.lineno,
