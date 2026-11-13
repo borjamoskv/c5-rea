@@ -15,18 +15,34 @@ from pathlib import Path
 from typing import Dict, Any, List, Tuple
 
 
+def _align4(n: int) -> int:
+    """Pad a length up to the next 4-byte Chromium pickle boundary."""
+    return (n + 3) & ~3
+
+
 def scan_asar(asar_path: str) -> Tuple[List[Tuple[str, int, int]], int, Any]:
-    """Lee la cabecera binaria de 16 bytes y devuelve el árbol de archivos in-memory."""
+    """Lee la cabecera pickle de Chromium y devuelve el árbol de archivos in-memory.
+
+    ASAR layout:
+      [uint32 pickle payload size (= 4)]
+      [uint32 header pickle size]
+      [header pickle: uint32 payload size, uint32 JSON length, JSON, 4-byte padding]
+      [file data...]
+
+    The data region starts at 8 + header_pickle_size, which equals
+    16 + align4(json_length). Using 16 + json_length (no padding) shifts
+    every file by 1–3 bytes and breaks package.json parsing.
+    """
     f = open(asar_path, 'rb')
     try:
         data = f.read(16)
         if len(data) < 16:
             raise ValueError("Archivo ASAR truncado o inválido (< 16 bytes)")
-        
-        u1, u2, header_size, json_size = struct.unpack('<IIII', data)
+
+        _size_payload, header_pickle_size, _header_payload_size, json_size = struct.unpack('<IIII', data)
         header_json_bytes = f.read(json_size)
         header = json.loads(header_json_bytes.decode('utf-8'))
-        header_offset = 16 + json_size
+        header_offset = 8 + header_pickle_size
 
         def find_files(node, path=''):
             res = []
