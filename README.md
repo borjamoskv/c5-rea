@@ -9,7 +9,7 @@
 [![Python Core](https://img.shields.io/badge/Python_core-stdlib-00e676?style=flat-square)](#capability-prerequisites)
 [![Existence Gap](https://img.shields.io/badge/Existence_Gap-0%25_Slopsquatting-38bdf8?style=flat-square)](#the-existence-gap-firewall-anti-slopsquatting--anti-slop)
 [![Verification](https://img.shields.io/badge/Contract_only-INCOMPLETE-f59e0b?style=flat-square)](#popperian-parity-auditor-100-contract-coverage)
-[![MCP Native](https://img.shields.io/badge/MCP-JSON--RPC_stdio_(%3C15ms)-a855f7?style=flat-square)](#mcp-server-integration-claude-code-cursor-antigravity-codex)
+[![MCP Native](https://img.shields.io/badge/MCP-JSON--RPC_stdio-a855f7?style=flat-square)](#mcp-server-integration-claude-code-cursor-antigravity-codex)
 [![Tests](https://img.shields.io/badge/Tests-run_locally-22c55e?style=flat-square)](#verification--test-suite)
 [![License: MIT](https://img.shields.io/badge/License-MIT-f4c430?style=flat-square)](LICENSE)
 
@@ -303,7 +303,7 @@ This repository includes two complete, reproducible forensic envelopes in [`evid
 | `recover-javascript <original>` | `--out DIR --toolchain DIR [--node BIN]` | Recovers AST and constant string tables (`rea_javascript.py` + `rea_js_recover.cjs`); exits nonzero (`INCOMPLETE`) as AST recovery alone does not certify application parity. |
 | `reconstruct-lmstudio` | `--model-file GGUF --model-id ID --library DYLIB --headers DIR --out DIR [--chat-api] [--advanced] [--renderer DYLIB] [--manage-reference]` | Synthesizes native GGUF inference (`rea_llm.py`) or HTTP/SSE chat servers (`rea_chat.py` + `rea_chat_worker.cpp`) and runs live differential comparisons against LM Studio. |
 | `existence-gap <target>` | File or directory path | Scans `.py`, `.ts`, `.tsx`, `.js`, and `.rs` files for slopsquatting, phantom imports & stubs. |
-| `serve` | *(stdin/stdout JSON-RPC 2.0)* | Launches the MCP server over `stdio` (protocol `2024-11-05`). |
+| `serve` | *(stdin/stdout JSON-RPC 2.0)* | Launches the MCP server over `stdio`; negotiates `2024-11-05`, `2025-03-26`, `2025-06-18`, or `2025-11-25`. |
 
 ---
 
@@ -327,15 +327,31 @@ Register `C5-REA` as a `stdio` MCP server in your agent's configuration (`mcp_co
 | MCP Tool Name | Input Parameters | Returned Payload |
 | :--- | :--- | :--- |
 | `rea_triage` | `target_path: string` | Full `BinaryTriageReport` JSON (SHA-256, arch, Shannon entropy, dylibs, symbols). |
+| `rea_orchestrate` | `target_path: string`, `max_functions?: int`, `out_dir?: string` | Consolidated evidence envelope and saved dossier path; `max_functions: 0` skips native CFG extraction. |
 | `rea_inspect_asar` | `asar_path: string` | In-memory Electron `.asar` index: file count, `package.json`, IPC channels, URLs. |
-| `rea_decompile_cfg` | `binary_path: string`, `max_functions?: int` | Array of `FunctionEvidence` objects with ARM64 disassembly, CFG node counts & `xrefs_out`. |
-| `rea_synthesize` | `evidence_path: string`, `lang?: "ts"\|"rust"\|"py"\|"c"`, `contracts_only?: bool` | Synthesis report (`GENERATED_UNVERIFIED`) with generated file paths. |
+| `rea_decompile_cfg` | `binary_path: string`, `max_functions?: int` | Array of `FunctionEvidence` objects with ARM64 disassembly, CFG node counts & `xrefs_out`; an empty extraction returns an `INCOMPLETE` error object. |
+| `rea_synthesize` | `evidence_path: string`, `lang?: "ts"\|"rust"\|"py"\|"c"`, `contracts_only?: bool`, `output_directory?: string` | Synthesis report (`GENERATED_UNVERIFIED`) with existing generated file paths; no generated files returns `INCOMPLETE`. |
 | `rea_reconstruct` | `original_argv: string[]`, `output_directory: string` | Learned byte-stream transducer implementation and live differential verification report. |
 | `rea_reconstruct_binary` | `original_path: string`, `output_directory: string`, `seed?: int`, `public_abi?: string` | ARM64 Mach-O to C lifted executable and live differential verification verdict. |
 | `rea_recover_javascript` | `original_path: string`, `output_directory: string`, `toolchain: string`, `node?: string` | AST/string table recovery summary (`INCOMPLETE`; never certifies full application parity). |
 | `rea_reconstruct_lmstudio` | `model_file: string`, `model_id: string`, `library: string`, `headers: string`, `output_directory: string`, `chat_api?: bool`, `advanced?: bool`, `renderer?: string`, `manage_reference?: bool` | Native GGUF / Chat SSE executable synthesis and live differential verification against LM Studio. |
 | `rea_audit_parity` | `evidence_path: string`, `contract_path: string`, `report_path?: string`, `seed?: int`, `manage_reference?: bool` | Verification verdict (`PASS`/`FAIL`/`INCOMPLETE`), coverage and missing channels; contract-only coverage never gives behavioral `PASS`. |
-| `rea_existence_gap` | `target_path: string` | Existence-Gap report (`PASS`/`FAIL`, `slop_percentage`, line-by-line AST violations). |
+| `rea_existence_gap` | `target_path: string` | Existence-Gap report (`PASS`/`FAIL`, `slop_percentage`, line-by-line AST violations); zero audited files returns `INCOMPLETE`. |
+
+### MCP transport and validation
+
+- Send `initialize` with `protocolVersion`, `capabilities` and `clientInfo`, followed by `notifications/initialized`. Supported handshake versions are `2024-11-05`, `2025-03-26`, `2025-06-18`, and `2025-11-25`. Any other requested version, including stateless `2026-07-28`, receives a counter-offer of `2025-11-25`; a client that cannot speak that counter-offer should disconnect. `server/discover` is rejected, as is any later request whose `_meta["io.modelcontextprotocol/protocolVersion"]` is `2026-07-28`. `initialize` cannot be repeated or cancelled. See the [2025-11-25 lifecycle](https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle).
+- JSON-RPC batches are accepted only on `2025-03-26`, the revision that added them. `2024-11-05` predates that addition, and `2025-06-18` removed it. A batch on any other negotiated version is a single `-32600` error and none of its calls run. An accepted batch is answered with one JSON array in request order, with notifications omitted; a notification-only batch produces no output.
+- Frames are newline-delimited UTF-8 JSON, limited to 1 MiB including the delimiter. Invalid JSON, duplicate keys, non-finite numbers, malformed requests and oversized frames receive JSON-RPC errors; the next frame is still processed. Notifications receive no response and cannot invoke tools. `ping` remains available before initialization.
+- Response frames are limited to 4 MiB including the delimiter and are serialized completely before any protocol bytes are written. Invalid or excessive responses become explicit errors, without silent evidence truncation, and the session remains usable. Successful backend results must contain a strict JSON object or array. If a response is too large, inspect the tool's output files before retrying: generation or verification may already have completed.
+- Tool arguments are validated against the advertised schema before execution. Unknown fields, wrong types, control characters and out-of-range values are rejected. Path arguments also reject `..` segments and lengths above 4096. Other strings are capped at 32768 characters and arrays at 256 items. `reference_url` must be an `http` or `https` URL. Evidence JSON and `public_abi` files are capped at 8 MiB and must be strict JSON. Generated files must resolve inside the requested output directory. `max_functions` is limited to 256 (minimum 1 for `rea_decompile_cfg`, 0 for `rea_orchestrate`); `context_length` must be from 1 to 1048576; `seed` must fit in a signed 64-bit integer. Boolean parameters require JSON `true`/`false`, not strings.
+- Unknown tools and malformed call envelopes return protocol errors. Invalid tool arguments, execution failures, and verification `FAIL`/`INCOMPLETE` return `isError: true`. `rea_existence_gap` rejects nonexistent targets and returns `INCOMPLETE` when no files were audited. An empty synthesis or CFG extraction is `INCOMPLETE`, not a successful empty payload. A missing orchestrate dossier is `INCOMPLETE`.
+- `notifications/cancelled` stops an in-flight tool. The server sends no response for that request, which is the [cancellation rule](https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/cancellation). A cancellation that arrives before its request drops that request, again with no response. Partial files from a killed tool are not a verdict.
+- Each stdio tool call runs in its own process group, so cancellation, timeout, and `SIGTERM` also kill processes the tool spawned. Default timeouts are 60s for triage and ASAR inspection, 120s for CFG and existence-gap, 180s for orchestrate, synthesize, and JavaScript recovery, 300s for parity, reconstruct, and binary reconstruct, and 600s for LM Studio. `REA_MCP_TOOL_TIMEOUT_SECONDS` overrides every tool. A timeout returns `isError: true` with `{"status":"INCOMPLETE","reason":"TIMEOUT"}`. Closing stdin finishes frames already read, then the process exits. `SIGTERM` aborts the in-flight tool and exits 0. Python diagnostics and inherited subprocess stdout go to stderr, never to the protocol stream. Task-augmented calls are rejected. The server runs one request at a time.
+- `2025-03-26` and later advertise tool annotations. `structuredContent` is added for `2025-06-18` and `2025-11-25`; array results use an `items` wrapper. `2024-11-05` and `2025-03-26` stay text-only.
+- `rea_audit_parity` refuses report aliases of evidence or candidate files, all symlink report destinations, missing parent directories and non-file destinations before verification. It rejects ambiguous evidence JSON, oversized evidence, and unknown backend verdicts. Its report is written to a temporary file, flushed, then atomically replaced; failed serialization, flush or replacement preserves the previous report and cleans up the temporary file. This covers the MCP report write, not files written independently by a backend. The response includes the saved report path. Existing input and output paths must remain under the caller's control during execution.
+
+Run transport regression tests independently with `python3 -m unittest discover -s tests -p 'test_mcp_protocol.py' -v`. They exercise both server entrypoints through real subprocess pipes, protocol recovery, stdout isolation, response limits and filesystem guards, including injected disk failures. These tests do not certify forensic reconstruction parity.
 
 ---
 
@@ -356,7 +372,7 @@ For multi-agent orchestrators, [`subagents/`](subagents/) defines 5 least-privil
 Run the unit test suite (`tests/test_*.py`: core suite, behavioral verification, ARM64 binary recovery, chat SSE protocol, JavaScript AST recovery, and native GGUF inference guards) and static self-audit separately. Runtime depends on the selected tests, capability prerequisites and host:
 
 ```bash
-# 1. Execute the full unit & differential regression suite (61 tests across 6 test modules)
+# 1. Execute the full unit & differential regression suite, including MCP transport tests
 python3 -m unittest discover -s tests -p "test_*.py" -v
 
 # 2. Run Existence-Gap self-audit on the repository itself (0 violations required)

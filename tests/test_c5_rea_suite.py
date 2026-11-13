@@ -6,6 +6,7 @@ Valida el 100% de los componentes en silicio sin dependencias externas.
 
 import unittest
 import os
+import shutil
 import sys
 import tempfile
 import json
@@ -240,11 +241,15 @@ class TestC5ReaSuite(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir)
             # Invocación directa del orquestador
+            resolved = str(Path("/bin/ls").resolve())
             envelope, out_file = orchestrate_target("/bin/ls", max_functions=2, out_dir=out_dir)
             self.assertTrue(out_file.exists())
-            self.assertEqual(envelope.target.target_path, "/bin/ls")
+            self.assertEqual(envelope.target.target_path, resolved)
             self.assertGreater(envelope.target.file_size_bytes, 0)
-            self.assertGreaterEqual(len(envelope.native_functions), 1)
+            if shutil.which("otool"):
+                self.assertGreaterEqual(len(envelope.native_functions), 1)
+            else:
+                self.assertEqual(envelope.native_functions, [])
 
             # Invocación a través del despachador de herramientas MCP
             mcp_res = handle_tools_call(42, {
@@ -258,7 +263,7 @@ class TestC5ReaSuite(unittest.TestCase):
             self.assertFalse(mcp_res["result"]["isError"])
             content_json = json.loads(mcp_res["result"]["content"][0]["text"])
             self.assertEqual(content_json["status"], "ORCHESTRATED")
-            self.assertEqual(content_json["target"], "/bin/ls")
+            self.assertEqual(content_json["target"], resolved)
 
     def test_asar_preload_bridge_and_orchestrator_strings(self):
         """Verificar extracción de contextBridge, módulos .mjs/.cjs y poblado de extracted_strings."""
